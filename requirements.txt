@@ -1,0 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+torch==2.6.0; sys_platform == "darwin"
+torch==2.6.0+cu124; sys_platform == "linux" and platform_machine == "x86_64"
+transformers==5.14.1
+tokenizers==0.22.2
+tqdm==4.70.0
