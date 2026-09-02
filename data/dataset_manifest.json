@@ -54,7 +54,7 @@
     },
     {
       "path": "requirements.txt",
-      "sha256": "09adaeac244f5e3f732b5f454fd9fe89b0a66781ef99b52e865e84db38f23dc2"
+      "sha256": "549e814534fd72ca7e998e6a73823b6e397e73dfb7f895740f02c13e1964fb36"
     },
     {
       "path": "scripts/check_service.py",
