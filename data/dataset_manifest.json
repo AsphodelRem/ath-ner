@@ -54,7 +54,7 @@
     },
     {
       "path": "notebooks/kaggle_train_predict_evaluate.ipynb",
-      "sha256": "997b4a7c9406dc7e88f0ef74cedbcba1f66fdd8a528e6b00336918df9333069f"
+      "sha256": "98ea0a48577957ab2e7c8fad7f9a6e1ac2112b304d42536640aecf50dc865c1f"
     },
     {
       "path": "requirements.txt",
