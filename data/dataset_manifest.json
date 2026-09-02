@@ -21,7 +21,7 @@
   },
   "documentation": {
     "path": "README.md",
-    "sha256": "1a951688eb07dc0ab37b8b13aa3f281d966a1af5eb01a944bc22820c328c55d7"
+    "sha256": "41cf344440b1068421cdd742ab118e0c45ea93ed025abaaa5b98dc84ac758a77"
   },
   "assets": [
     {
@@ -34,7 +34,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "1a951688eb07dc0ab37b8b13aa3f281d966a1af5eb01a944bc22820c328c55d7"
+      "sha256": "41cf344440b1068421cdd742ab118e0c45ea93ed025abaaa5b98dc84ac758a77"
     },
     {
       "path": "baseline/__init__.py",
@@ -51,6 +51,10 @@
     {
       "path": "baseline/train.py",
       "sha256": "2bb9fd2b3368f51e737796e4fec876f0c0bd773d8a66c0195ef52b1363c7e169"
+    },
+    {
+      "path": "notebooks/kaggle_train_predict_evaluate.ipynb",
+      "sha256": "997b4a7c9406dc7e88f0ef74cedbcba1f66fdd8a528e6b00336918df9333069f"
     },
     {
       "path": "requirements.txt",
