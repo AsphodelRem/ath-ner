@@ -1,0 +1,512 @@
+{
+  "schema_version": 1,
+  "models": [
+    "seed42_viterbi",
+    "seed42_argmax",
+    "seed1337_viterbi",
+    "seed1337_argmax",
+    "xlmr",
+    "crf",
+    "suffix_lexicon",
+    "exact_lexicon"
+  ],
+  "prediction_files": [
+    "artifacts/experiments/mmbert-bilou/dev_predictions_viterbi.jsonl",
+    "artifacts/experiments/mmbert-bilou/dev_predictions_argmax.jsonl",
+    "artifacts/experiments/mmbert-bilou-seed1337/dev_predictions_viterbi.jsonl",
+    "artifacts/experiments/mmbert-bilou-seed1337/dev_predictions_argmax.jsonl",
+    "artifacts/experiments/xlm-roberta-base/dev_predictions.jsonl",
+    "artifacts/statistical/crf/dev_predictions_threshold_0.jsonl",
+    "artifacts/statistical/suffix-lexicon/dev_predictions_suffix.jsonl",
+    "artifacts/statistical/suffix-lexicon/dev_predictions_exact.jsonl"
+  ],
+  "folds": 5,
+  "seed": 42,
+  "candidates": 13340,
+  "positive_candidates": 7298,
+  "include_recombined_boundaries": false,
+  "model_results": [
+    {
+      "model": "logreg",
+      "thresholds": {
+        "ORG": 0.3449999999999999,
+        "NAME": 0.37999999999999995,
+        "GEO": 0.38999999999999996
+      },
+      "variants": {
+        "all": {
+          "micro": {
+            "precision": 0.8976889119709166,
+            "recall": 0.8981553650298779,
+            "f1": 0.8979220779220779,
+            "tp": 6914,
+            "fp": 788,
+            "fn": 784,
+            "gold": 7698,
+            "predicted": 7702
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.8790662074244164,
+              "recall": 0.8638585934561865,
+              "f1": 0.8713960546282246,
+              "tp": 2297,
+              "fp": 316,
+              "fn": 362,
+              "gold": 2659,
+              "predicted": 2613
+            },
+            "NAME": {
+              "precision": 0.9077506318449874,
+              "recall": 0.9292798620094869,
+              "f1": 0.9183890901342425,
+              "tp": 2155,
+              "fp": 219,
+              "fn": 164,
+              "gold": 2319,
+              "predicted": 2374
+            },
+            "GEO": {
+              "precision": 0.9068139963167587,
+              "recall": 0.9051470588235294,
+              "f1": 0.9059797608095677,
+              "tp": 2462,
+              "fp": 253,
+              "fn": 258,
+              "gold": 2720,
+              "predicted": 2715
+            }
+          }
+        },
+        "nonoverlap": {
+          "micro": {
+            "precision": 0.9058266473760358,
+            "recall": 0.8946479605092231,
+            "f1": 0.9002026011371805,
+            "tp": 6887,
+            "fp": 716,
+            "fn": 811,
+            "gold": 7698,
+            "predicted": 7603
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.8869902912621359,
+              "recall": 0.8589695374200828,
+              "f1": 0.8727550630492931,
+              "tp": 2284,
+              "fp": 291,
+              "fn": 375,
+              "gold": 2659,
+              "predicted": 2575
+            },
+            "NAME": {
+              "precision": 0.9159556313993175,
+              "recall": 0.9258300991806814,
+              "f1": 0.9208663950246623,
+              "tp": 2147,
+              "fp": 197,
+              "fn": 172,
+              "gold": 2319,
+              "predicted": 2344
+            },
+            "GEO": {
+              "precision": 0.9150521609538003,
+              "recall": 0.9029411764705882,
+              "f1": 0.9089563286454478,
+              "tp": 2456,
+              "fp": 228,
+              "fn": 264,
+              "gold": 2720,
+              "predicted": 2684
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "histgb15",
+      "thresholds": {
+        "ORG": 0.3999999999999999,
+        "NAME": 0.26499999999999996,
+        "GEO": 0.5549999999999999
+      },
+      "variants": {
+        "all": {
+          "micro": {
+            "precision": 0.9014765451456945,
+            "recall": 0.8962068069628475,
+            "f1": 0.8988339521855254,
+            "tp": 6899,
+            "fp": 754,
+            "fn": 799,
+            "gold": 7698,
+            "predicted": 7653
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.8826254826254826,
+              "recall": 0.8597216998871756,
+              "f1": 0.8710230520099066,
+              "tp": 2286,
+              "fp": 304,
+              "fn": 373,
+              "gold": 2659,
+              "predicted": 2590
+            },
+            "NAME": {
+              "precision": 0.8911536893599674,
+              "recall": 0.9426476929711083,
+              "f1": 0.9161777032690696,
+              "tp": 2186,
+              "fp": 267,
+              "fn": 133,
+              "gold": 2319,
+              "predicted": 2453
+            },
+            "GEO": {
+              "precision": 0.9298850574712644,
+              "recall": 0.8922794117647059,
+              "f1": 0.9106941838649155,
+              "tp": 2427,
+              "fp": 183,
+              "fn": 293,
+              "gold": 2720,
+              "predicted": 2610
+            }
+          }
+        },
+        "nonoverlap": {
+          "micro": {
+            "precision": 0.9070381618909283,
+            "recall": 0.8923096908287868,
+            "f1": 0.8996136467814813,
+            "tp": 6869,
+            "fp": 704,
+            "fn": 829,
+            "gold": 7698,
+            "predicted": 7573
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.8869395711500975,
+              "recall": 0.8555848063181647,
+              "f1": 0.8709800918836141,
+              "tp": 2275,
+              "fp": 290,
+              "fn": 384,
+              "gold": 2659,
+              "predicted": 2565
+            },
+            "NAME": {
+              "precision": 0.9036697247706422,
+              "recall": 0.9344545062526951,
+              "f1": 0.9188043247827009,
+              "tp": 2167,
+              "fp": 231,
+              "fn": 152,
+              "gold": 2319,
+              "predicted": 2398
+            },
+            "GEO": {
+              "precision": 0.9298850574712644,
+              "recall": 0.8922794117647059,
+              "f1": 0.9106941838649155,
+              "tp": 2427,
+              "fp": 183,
+              "fn": 293,
+              "gold": 2720,
+              "predicted": 2610
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "histgb31",
+      "thresholds": {
+        "ORG": 0.42999999999999994,
+        "NAME": 0.35999999999999993,
+        "GEO": 0.5249999999999999
+      },
+      "variants": {
+        "all": {
+          "micro": {
+            "precision": 0.9045610334827313,
+            "recall": 0.8914003637308392,
+            "f1": 0.8979324784087935,
+            "tp": 6862,
+            "fp": 724,
+            "fn": 836,
+            "gold": 7698,
+            "predicted": 7586
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.886328125,
+              "recall": 0.8533283189168861,
+              "f1": 0.869515232803219,
+              "tp": 2269,
+              "fp": 291,
+              "fn": 390,
+              "gold": 2659,
+              "predicted": 2560
+            },
+            "NAME": {
+              "precision": 0.9018789144050104,
+              "recall": 0.9314359637774903,
+              "f1": 0.9164191769198133,
+              "tp": 2160,
+              "fp": 235,
+              "fn": 159,
+              "gold": 2319,
+              "predicted": 2395
+            },
+            "GEO": {
+              "precision": 0.9247434435575826,
+              "recall": 0.8944852941176471,
+              "f1": 0.909362735937208,
+              "tp": 2433,
+              "fp": 198,
+              "fn": 287,
+              "gold": 2720,
+              "predicted": 2631
+            }
+          }
+        },
+        "nonoverlap": {
+          "micro": {
+            "precision": 0.9095864911580906,
+            "recall": 0.8886723824369966,
+            "f1": 0.8990078191734017,
+            "tp": 6841,
+            "fp": 680,
+            "fn": 857,
+            "gold": 7698,
+            "predicted": 7521
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.8904649330181245,
+              "recall": 0.849943587814968,
+              "f1": 0.8697325380026939,
+              "tp": 2260,
+              "fp": 278,
+              "fn": 399,
+              "gold": 2659,
+              "predicted": 2538
+            },
+            "NAME": {
+              "precision": 0.910941475826972,
+              "recall": 0.926261319534282,
+              "f1": 0.9185375240538807,
+              "tp": 2148,
+              "fp": 210,
+              "fn": 171,
+              "gold": 2319,
+              "predicted": 2358
+            },
+            "GEO": {
+              "precision": 0.9268571428571428,
+              "recall": 0.8944852941176471,
+              "f1": 0.9103835360149672,
+              "tp": 2433,
+              "fp": 192,
+              "fn": 287,
+              "gold": 2720,
+              "predicted": 2625
+            }
+          }
+        }
+      }
+    },
+    {
+      "model": "extra_trees",
+      "thresholds": {
+        "ORG": 0.5149999999999999,
+        "NAME": 0.43999999999999995,
+        "GEO": 0.33999999999999997
+      },
+      "variants": {
+        "all": {
+          "micro": {
+            "precision": 0.902496714848883,
+            "recall": 0.8921797869576513,
+            "f1": 0.8973085968121244,
+            "tp": 6868,
+            "fp": 742,
+            "fn": 830,
+            "gold": 7698,
+            "predicted": 7610
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.9083844580777096,
+              "recall": 0.8352764197066567,
+              "f1": 0.8702978056426333,
+              "tp": 2221,
+              "fp": 224,
+              "fn": 438,
+              "gold": 2659,
+              "predicted": 2445
+            },
+            "NAME": {
+              "precision": 0.9063559322033898,
+              "recall": 0.9223803363518758,
+              "f1": 0.9142979269074588,
+              "tp": 2139,
+              "fp": 221,
+              "fn": 180,
+              "gold": 2319,
+              "predicted": 2360
+            },
+            "GEO": {
+              "precision": 0.8941176470588236,
+              "recall": 0.9220588235294118,
+              "f1": 0.9078733031674208,
+              "tp": 2508,
+              "fp": 297,
+              "fn": 212,
+              "gold": 2720,
+              "predicted": 2805
+            }
+          }
+        },
+        "nonoverlap": {
+          "micro": {
+            "precision": 0.9108950452850293,
+            "recall": 0.8884125746947259,
+            "f1": 0.8995133499934237,
+            "tp": 6839,
+            "fp": 669,
+            "fn": 859,
+            "gold": 7698,
+            "predicted": 7508
+          },
+          "by_label": {
+            "ORG": {
+              "precision": 0.9097990979909799,
+              "recall": 0.8345242572395637,
+              "f1": 0.8705374656728129,
+              "tp": 2219,
+              "fp": 220,
+              "fn": 440,
+              "gold": 2659,
+              "predicted": 2439
+            },
+            "NAME": {
+              "precision": 0.9124839124839125,
+              "recall": 0.9172056921086675,
+              "f1": 0.9148387096774193,
+              "tp": 2127,
+              "fp": 204,
+              "fn": 192,
+              "gold": 2319,
+              "predicted": 2331
+            },
+            "GEO": {
+              "precision": 0.910518626734843,
+              "recall": 0.9165441176470588,
+              "f1": 0.9135214364235984,
+              "tp": 2493,
+              "fp": 245,
+              "fn": 227,
+              "gold": 2720,
+              "predicted": 2738
+            }
+          }
+        }
+      }
+    }
+  ],
+  "selected_model": "logreg",
+  "selected_variant": "nonoverlap",
+  "oof_metrics": {
+    "micro": {
+      "precision": 0.9058266473760358,
+      "recall": 0.8946479605092231,
+      "f1": 0.9002026011371805,
+      "tp": 6887,
+      "fp": 716,
+      "fn": 811,
+      "gold": 7698,
+      "predicted": 7603
+    },
+    "by_label": {
+      "ORG": {
+        "precision": 0.8869902912621359,
+        "recall": 0.8589695374200828,
+        "f1": 0.8727550630492931,
+        "tp": 2284,
+        "fp": 291,
+        "fn": 375,
+        "gold": 2659,
+        "predicted": 2575
+      },
+      "NAME": {
+        "precision": 0.9159556313993175,
+        "recall": 0.9258300991806814,
+        "f1": 0.9208663950246623,
+        "tp": 2147,
+        "fp": 197,
+        "fn": 172,
+        "gold": 2319,
+        "predicted": 2344
+      },
+      "GEO": {
+        "precision": 0.9150521609538003,
+        "recall": 0.9029411764705882,
+        "f1": 0.9089563286454478,
+        "tp": 2456,
+        "fp": 228,
+        "fn": 264,
+        "gold": 2720,
+        "predicted": 2684
+      }
+    }
+  },
+  "fitted_dev_metrics": {
+    "micro": {
+      "precision": 0.9105712409717662,
+      "recall": 0.900753442452585,
+      "f1": 0.9056357343433684,
+      "tp": 6934,
+      "fp": 681,
+      "fn": 764,
+      "gold": 7698,
+      "predicted": 7615
+    },
+    "by_label": {
+      "ORG": {
+        "precision": 0.8935672514619883,
+        "recall": 0.8619781872884543,
+        "f1": 0.877488514548239,
+        "tp": 2292,
+        "fp": 273,
+        "fn": 367,
+        "gold": 2659,
+        "predicted": 2565
+      },
+      "NAME": {
+        "precision": 0.9175170068027211,
+        "recall": 0.930573523070289,
+        "f1": 0.9239991436523228,
+        "tp": 2158,
+        "fp": 194,
+        "fn": 161,
+        "gold": 2319,
+        "predicted": 2352
+      },
+      "GEO": {
+        "precision": 0.9206819866567828,
+        "recall": 0.913235294117647,
+        "f1": 0.9169435215946844,
+        "tp": 2484,
+        "fp": 214,
+        "fn": 236,
+        "gold": 2720,
+        "predicted": 2698
+      }
+    }
+  }
+}

@@ -1,0 +1,552 @@
+{
+  "schema_version": 1,
+  "definitions": {
+    "pure_script": "At least one Unicode Latin/Cyrillic letter, no letter from the other script, and no non-modifier letter from another script.",
+    "letters": "Unicode non-modifier letters whose names contain LATIN or CYRILLIC.",
+    "words": "Whitespace-delimited nonempty fields containing at least one Unicode letter or digit.",
+    "tokens": "Tokenizer input IDs with add_special_tokens=False and no truncation.",
+    "corpus_rate": "Micro-average: total tokens divided by total letters or words.",
+    "comparison_direction": "Ratio is Cyrillic / Latin; gap is Cyrillic - Latin."
+  },
+  "dataset": {
+    "train": {
+      "path": "data/train.jsonl",
+      "sha256": "b3281c93aeb28353384b749627a4a82217cdd250a607a3ea3803363b31718346"
+    },
+    "dev": {
+      "path": "data/dev.jsonl",
+      "sha256": "7e5d96a1de83311e3acb33a3c28ed8e13783141143c8eb83e86fb329a795e4d0"
+    },
+    "selection": {
+      "train": {
+        "documents": 13000,
+        "document_classes": {
+          "cyrillic": 2195,
+          "latin": 7749,
+          "mixed_latin_cyrillic": 2927,
+          "other_or_multiscript": 129
+        }
+      },
+      "dev": {
+        "documents": 1500,
+        "document_classes": {
+          "cyrillic": 271,
+          "latin": 886,
+          "mixed_latin_cyrillic": 332,
+          "other_or_multiscript": 11
+        }
+      },
+      "combined": {
+        "documents": 14500,
+        "document_classes": {
+          "cyrillic": 2466,
+          "latin": 8635,
+          "mixed_latin_cyrillic": 3259,
+          "other_or_multiscript": 140
+        }
+      }
+    }
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "transformers": "5.14.1",
+    "tokenizers": "0.22.2"
+  },
+  "tokenizers": {
+    "mmbert_base": {
+      "path": "artifacts/pretrained/mmbert-base",
+      "resolved_path": "/Users/firgla/Downloads/ner_uz_hackathon_participant/artifacts/pretrained/mmbert-base",
+      "tokenizer_class": "TokenizersBackend",
+      "is_fast": true,
+      "vocabulary_size": 256000,
+      "splits": {
+        "train": {
+          "latin": {
+            "documents": 7749,
+            "total_letters": 3171944,
+            "total_words": 489767,
+            "total_tokens": 1418584,
+            "tokens_per_100_letters": 44.722858,
+            "tokens_per_word": 2.896447,
+            "median_per_document": {
+              "tokens": 45,
+              "letters": 97,
+              "words": 17,
+              "tokens_per_100_letters": 42.937853,
+              "tokens_per_word": 2.80198
+            }
+          },
+          "cyrillic": {
+            "documents": 2195,
+            "total_letters": 530662,
+            "total_words": 84249,
+            "total_tokens": 298171,
+            "tokens_per_100_letters": 56.188497,
+            "tokens_per_word": 3.539164,
+            "median_per_document": {
+              "tokens": 54,
+              "letters": 92,
+              "words": 16,
+              "tokens_per_100_letters": 54.684512,
+              "tokens_per_word": 3.363636
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.256371,
+              "cyrillic_minus_latin_gap": 11.465639
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.221898,
+              "cyrillic_minus_latin_gap": 0.642717
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.273574,
+                "cyrillic_minus_latin_gap": 11.746659
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.20045,
+                "cyrillic_minus_latin_gap": 0.561656
+              }
+            }
+          }
+        },
+        "dev": {
+          "latin": {
+            "documents": 886,
+            "total_letters": 354444,
+            "total_words": 53917,
+            "total_tokens": 157081,
+            "tokens_per_100_letters": 44.317579,
+            "tokens_per_word": 2.913385,
+            "median_per_document": {
+              "tokens": 50.0,
+              "letters": 114.0,
+              "words": 18.0,
+              "tokens_per_100_letters": 42.540964,
+              "tokens_per_word": 2.777778
+            }
+          },
+          "cyrillic": {
+            "documents": 271,
+            "total_letters": 71406,
+            "total_words": 11427,
+            "total_tokens": 40665,
+            "tokens_per_100_letters": 56.948996,
+            "tokens_per_word": 3.558677,
+            "median_per_document": {
+              "tokens": 56,
+              "letters": 101,
+              "words": 17,
+              "tokens_per_100_letters": 55.276382,
+              "tokens_per_word": 3.357143
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.28502,
+              "cyrillic_minus_latin_gap": 12.631417
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.221492,
+              "cyrillic_minus_latin_gap": 0.645292
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.299368,
+                "cyrillic_minus_latin_gap": 12.735418
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.208571,
+                "cyrillic_minus_latin_gap": 0.579365
+              }
+            }
+          }
+        },
+        "combined": {
+          "latin": {
+            "documents": 8635,
+            "total_letters": 3526388,
+            "total_words": 543684,
+            "total_tokens": 1575665,
+            "tokens_per_100_letters": 44.682122,
+            "tokens_per_word": 2.898126,
+            "median_per_document": {
+              "tokens": 46,
+              "letters": 98,
+              "words": 17,
+              "tokens_per_100_letters": 42.877767,
+              "tokens_per_word": 2.8
+            }
+          },
+          "cyrillic": {
+            "documents": 2466,
+            "total_letters": 602068,
+            "total_words": 95676,
+            "total_tokens": 338836,
+            "tokens_per_100_letters": 56.278693,
+            "tokens_per_word": 3.541494,
+            "median_per_document": {
+              "tokens": 54.0,
+              "letters": 93.0,
+              "words": 16.0,
+              "tokens_per_100_letters": 54.714423,
+              "tokens_per_word": 3.363636
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.259535,
+              "cyrillic_minus_latin_gap": 11.596571
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.221994,
+              "cyrillic_minus_latin_gap": 0.643368
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.276056,
+                "cyrillic_minus_latin_gap": 11.836656
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.201299,
+                "cyrillic_minus_latin_gap": 0.563636
+              }
+            }
+          }
+        }
+      }
+    },
+    "xlm_roberta_base": {
+      "path": "artifacts/experiments/xlm-roberta-base/model",
+      "resolved_path": "/Users/firgla/Downloads/ner_uz_hackathon_participant/artifacts/experiments/xlm-roberta-base/model",
+      "tokenizer_class": "XLMRobertaTokenizer",
+      "is_fast": true,
+      "vocabulary_size": 250002,
+      "splits": {
+        "train": {
+          "latin": {
+            "documents": 7749,
+            "total_letters": 3171944,
+            "total_words": 489767,
+            "total_tokens": 1096386,
+            "tokens_per_100_letters": 34.565112,
+            "tokens_per_word": 2.238587,
+            "median_per_document": {
+              "tokens": 38,
+              "letters": 97,
+              "words": 17,
+              "tokens_per_100_letters": 35.714286,
+              "tokens_per_word": 2.243655
+            }
+          },
+          "cyrillic": {
+            "documents": 2195,
+            "total_letters": 530662,
+            "total_words": 84249,
+            "total_tokens": 260752,
+            "tokens_per_100_letters": 49.137116,
+            "tokens_per_word": 3.095016,
+            "median_per_document": {
+              "tokens": 46,
+              "letters": 92,
+              "words": 16,
+              "tokens_per_100_letters": 48.264463,
+              "tokens_per_word": 2.985507
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.421581,
+              "cyrillic_minus_latin_gap": 14.572004
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.382576,
+              "cyrillic_minus_latin_gap": 0.856429
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.351405,
+                "cyrillic_minus_latin_gap": 12.550177
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.330644,
+                "cyrillic_minus_latin_gap": 0.741852
+              }
+            }
+          }
+        },
+        "dev": {
+          "latin": {
+            "documents": 886,
+            "total_letters": 354444,
+            "total_words": 53917,
+            "total_tokens": 121798,
+            "tokens_per_100_letters": 34.363115,
+            "tokens_per_word": 2.258991,
+            "median_per_document": {
+              "tokens": 42.0,
+              "letters": 114.0,
+              "words": 18.0,
+              "tokens_per_100_letters": 35.245902,
+              "tokens_per_word": 2.230769
+            }
+          },
+          "cyrillic": {
+            "documents": 271,
+            "total_letters": 71406,
+            "total_words": 11427,
+            "total_tokens": 35753,
+            "tokens_per_100_letters": 50.070022,
+            "tokens_per_word": 3.128818,
+            "median_per_document": {
+              "tokens": 50,
+              "letters": 101,
+              "words": 17,
+              "tokens_per_100_letters": 48.736228,
+              "tokens_per_word": 2.974026
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.457086,
+              "cyrillic_minus_latin_gap": 15.706907
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.385051,
+              "cyrillic_minus_latin_gap": 0.869827
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.382749,
+                "cyrillic_minus_latin_gap": 13.490326
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.333184,
+                "cyrillic_minus_latin_gap": 0.743257
+              }
+            }
+          }
+        },
+        "combined": {
+          "latin": {
+            "documents": 8635,
+            "total_letters": 3526388,
+            "total_words": 543684,
+            "total_tokens": 1218184,
+            "tokens_per_100_letters": 34.544809,
+            "tokens_per_word": 2.24061,
+            "median_per_document": {
+              "tokens": 39,
+              "letters": 98,
+              "words": 17,
+              "tokens_per_100_letters": 35.714286,
+              "tokens_per_word": 2.241379
+            }
+          },
+          "cyrillic": {
+            "documents": 2466,
+            "total_letters": 602068,
+            "total_words": 95676,
+            "total_tokens": 296505,
+            "tokens_per_100_letters": 49.247759,
+            "tokens_per_word": 3.099053,
+            "median_per_document": {
+              "tokens": 47.0,
+              "letters": 93.0,
+              "words": 16.0,
+              "tokens_per_100_letters": 48.320152,
+              "tokens_per_word": 2.984148
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.42562,
+              "cyrillic_minus_latin_gap": 14.70295
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.383129,
+              "cyrillic_minus_latin_gap": 0.858443
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.352964,
+                "cyrillic_minus_latin_gap": 12.605866
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.331389,
+                "cyrillic_minus_latin_gap": 0.742769
+              }
+            }
+          }
+        }
+      }
+    },
+    "baseline_distilmbert": {
+      "path": "artifacts/baseline/model",
+      "resolved_path": "/Users/firgla/Downloads/ner_uz_hackathon_participant/artifacts/baseline/model",
+      "tokenizer_class": "BertTokenizer",
+      "is_fast": true,
+      "vocabulary_size": 119547,
+      "splits": {
+        "train": {
+          "latin": {
+            "documents": 7749,
+            "total_letters": 3171944,
+            "total_words": 489767,
+            "total_tokens": 1351343,
+            "tokens_per_100_letters": 42.60299,
+            "tokens_per_word": 2.759155,
+            "median_per_document": {
+              "tokens": 45,
+              "letters": 97,
+              "words": 17,
+              "tokens_per_100_letters": 42.105263,
+              "tokens_per_word": 2.733333
+            }
+          },
+          "cyrillic": {
+            "documents": 2195,
+            "total_letters": 530662,
+            "total_words": 84249,
+            "total_tokens": 295914,
+            "tokens_per_100_letters": 55.763179,
+            "tokens_per_word": 3.512374,
+            "median_per_document": {
+              "tokens": 59,
+              "letters": 92,
+              "words": 16,
+              "tokens_per_100_letters": 53.375196,
+              "tokens_per_word": 3.333333
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.308903,
+              "cyrillic_minus_latin_gap": 13.160189
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.272989,
+              "cyrillic_minus_latin_gap": 0.753219
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.267661,
+                "cyrillic_minus_latin_gap": 11.269933
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.219512,
+                "cyrillic_minus_latin_gap": 0.6
+              }
+            }
+          }
+        },
+        "dev": {
+          "latin": {
+            "documents": 886,
+            "total_letters": 354444,
+            "total_words": 53917,
+            "total_tokens": 150378,
+            "tokens_per_100_letters": 42.426448,
+            "tokens_per_word": 2.789065,
+            "median_per_document": {
+              "tokens": 50.0,
+              "letters": 114.0,
+              "words": 18.0,
+              "tokens_per_100_letters": 41.821041,
+              "tokens_per_word": 2.709082
+            }
+          },
+          "cyrillic": {
+            "documents": 271,
+            "total_letters": 71406,
+            "total_words": 11427,
+            "total_tokens": 40168,
+            "tokens_per_100_letters": 56.252976,
+            "tokens_per_word": 3.515183,
+            "median_per_document": {
+              "tokens": 59,
+              "letters": 101,
+              "words": 17,
+              "tokens_per_100_letters": 54.054054,
+              "tokens_per_word": 3.325581
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.325894,
+              "cyrillic_minus_latin_gap": 13.826528
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.260345,
+              "cyrillic_minus_latin_gap": 0.726118
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.292509,
+                "cyrillic_minus_latin_gap": 12.233013
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.227567,
+                "cyrillic_minus_latin_gap": 0.616499
+              }
+            }
+          }
+        },
+        "combined": {
+          "latin": {
+            "documents": 8635,
+            "total_letters": 3526388,
+            "total_words": 543684,
+            "total_tokens": 1501721,
+            "tokens_per_100_letters": 42.585246,
+            "tokens_per_word": 2.762121,
+            "median_per_document": {
+              "tokens": 46,
+              "letters": 98,
+              "words": 17,
+              "tokens_per_100_letters": 42.105263,
+              "tokens_per_word": 2.729167
+            }
+          },
+          "cyrillic": {
+            "documents": 2466,
+            "total_letters": 602068,
+            "total_words": 95676,
+            "total_tokens": 336082,
+            "tokens_per_100_letters": 55.821269,
+            "tokens_per_word": 3.51271,
+            "median_per_document": {
+              "tokens": 59.0,
+              "letters": 93.0,
+              "words": 16.0,
+              "tokens_per_100_letters": 53.443715,
+              "tokens_per_word": 3.333333
+            }
+          },
+          "cyrillic_vs_latin": {
+            "tokens_per_100_letters": {
+              "cyrillic_over_latin_ratio": 1.310812,
+              "cyrillic_minus_latin_gap": 13.236023
+            },
+            "tokens_per_word": {
+              "cyrillic_over_latin_ratio": 1.271744,
+              "cyrillic_minus_latin_gap": 0.750589
+            },
+            "median_per_document": {
+              "tokens_per_100_letters": {
+                "cyrillic_over_latin_ratio": 1.269288,
+                "cyrillic_minus_latin_gap": 11.338452
+              },
+              "tokens_per_word": {
+                "cyrillic_over_latin_ratio": 1.221374,
+                "cyrillic_minus_latin_gap": 0.604166
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

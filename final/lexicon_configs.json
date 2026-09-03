@@ -1,0 +1,20 @@
+{
+  "exact": {
+    "exact_min_count": 2,
+    "exact_min_purity": 0.8,
+    "suffix_min_support": 3,
+    "suffix_root_min_count": 2,
+    "suffix_root_min_purity": 0.9,
+    "allow_suffixes": false,
+    "suffix_policy": "learned"
+  },
+  "suffix": {
+    "exact_min_count": 2,
+    "exact_min_purity": 0.8,
+    "suffix_min_support": 8,
+    "suffix_root_min_count": 2,
+    "suffix_root_min_purity": 0.9,
+    "allow_suffixes": true,
+    "suffix_policy": "uzbek_whitelist"
+  }
+}

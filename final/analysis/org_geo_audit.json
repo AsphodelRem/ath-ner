@@ -1,0 +1,1180 @@
+{
+  "schema_version": 1,
+  "inputs": {
+    "train": "data/train.jsonl",
+    "dev": "data/dev.jsonl",
+    "predictions": {
+      "mmbert_bilou_viterbi": "artifacts/experiments/mmbert-bilou/dev_predictions_viterbi.jsonl",
+      "span_stacker_bilou_dual_decode_oof": "artifacts/experiments/span-stacker-bilou-dual-decode/dev_predictions_oof.jsonl"
+    },
+    "source_config": "artifacts/experiments/span-stacker-bilou-dual-decode/experiment.json",
+    "source_prediction_files": {
+      "mmbert_bilou_viterbi": "artifacts/experiments/mmbert-bilou/dev_predictions_viterbi.jsonl",
+      "mmbert_bilou_argmax": "artifacts/experiments/mmbert-bilou/dev_predictions_argmax.jsonl",
+      "mmbert_bio": "artifacts/experiments/mmbert-mask-partial/dev_predictions_center.jsonl",
+      "xlmr": "artifacts/experiments/xlm-roberta-base/dev_predictions.jsonl",
+      "crf": "artifacts/statistical/crf/dev_predictions_threshold_0.jsonl",
+      "suffix_lexicon": "artifacts/statistical/suffix-lexicon/dev_predictions_suffix.jsonl",
+      "exact_lexicon": "artifacts/statistical/suffix-lexicon/dev_predictions_exact.jsonl"
+    }
+  },
+  "definitions": {
+    "exact_boundary_confusion": "A gold ORG/GEO entity whose exact [start,end) boundary is predicted with the opposite ORG/GEO label and not with the gold label.",
+    "document_length": "Number of Unicode code points returned by Python len(text).",
+    "document_length_buckets": [
+      "0000-0128",
+      "0129-0512",
+      "0513-2048",
+      "2049+"
+    ]
+  },
+  "validation": {
+    "train_records": 13000,
+    "dev_records": 1500,
+    "prediction_hash_sets_match_dev": true,
+    "source_prediction_hash_sets_match_dev": true
+  },
+  "datasets": {
+    "train": {
+      "documents": 13000,
+      "entities": {
+        "total": 66083,
+        "ORG": 23420,
+        "NAME": 21218,
+        "GEO": 21445
+      },
+      "documents_by_character_length": {
+        "0000-0128": 6068,
+        "0129-0512": 3587,
+        "0513-2048": 2779,
+        "2049+": 566
+      }
+    },
+    "dev": {
+      "documents": 1500,
+      "entities": {
+        "total": 7698,
+        "ORG": 2659,
+        "NAME": 2319,
+        "GEO": 2720
+      },
+      "documents_by_character_length": {
+        "0000-0128": 663,
+        "0129-0512": 455,
+        "0513-2048": 329,
+        "2049+": 53
+      }
+    }
+  },
+  "training_surface_evidence": {
+    "normalization": "Unicode NFKC, casefold, whitespace collapse",
+    "unique_normalized_surfaces": {
+      "ORG": 8886,
+      "GEO": 6741,
+      "appearing_as_both_ORG_and_GEO": 137
+    },
+    "dev_focus_surface_evidence": {
+      "seen_as_ORG_or_GEO": 3654,
+      "unseen_as_ORG_or_GEO": 1725,
+      "seen_with_both_labels": 428,
+      "training_majority_is_opposite": 43
+    },
+    "top_ambiguous_training_surfaces": [
+      {
+        "normalized_surface": "andijon",
+        "ORG": 21,
+        "GEO": 54,
+        "total": 75
+      },
+      {
+        "normalized_surface": "андижон",
+        "ORG": 18,
+        "GEO": 55,
+        "total": 73
+      },
+      {
+        "normalized_surface": "bunyodkor",
+        "ORG": 24,
+        "GEO": 16,
+        "total": 40
+      },
+      {
+        "normalized_surface": "бунёдкор",
+        "ORG": 13,
+        "GEO": 15,
+        "total": 28
+      },
+      {
+        "normalized_surface": "oqtepa",
+        "ORG": 17,
+        "GEO": 12,
+        "total": 29
+      },
+      {
+        "normalized_surface": "хоразм",
+        "ORG": 12,
+        "GEO": 14,
+        "total": 26
+      },
+      {
+        "normalized_surface": "бухоро",
+        "ORG": 20,
+        "GEO": 11,
+        "total": 31
+      },
+      {
+        "normalized_surface": "buxoro",
+        "ORG": 9,
+        "GEO": 36,
+        "total": 45
+      },
+      {
+        "normalized_surface": "oʻzbekiston",
+        "ORG": 8,
+        "GEO": 650,
+        "total": 658
+      },
+      {
+        "normalized_surface": "mdh",
+        "ORG": 11,
+        "GEO": 7,
+        "total": 18
+      },
+      {
+        "normalized_surface": "сурхон",
+        "ORG": 7,
+        "GEO": 7,
+        "total": 14
+      },
+      {
+        "normalized_surface": "paxtakor",
+        "ORG": 41,
+        "GEO": 5,
+        "total": 46
+      },
+      {
+        "normalized_surface": "argentina",
+        "ORG": 5,
+        "GEO": 15,
+        "total": 20
+      },
+      {
+        "normalized_surface": "murad building",
+        "ORG": 35,
+        "GEO": 4,
+        "total": 39
+      },
+      {
+        "normalized_surface": "yaponiya",
+        "ORG": 4,
+        "GEO": 30,
+        "total": 34
+      },
+      {
+        "normalized_surface": "asaka",
+        "ORG": 4,
+        "GEO": 9,
+        "total": 13
+      },
+      {
+        "normalized_surface": "astana",
+        "ORG": 6,
+        "GEO": 4,
+        "total": 10
+      },
+      {
+        "normalized_surface": "murad buildings",
+        "ORG": 304,
+        "GEO": 3,
+        "total": 307
+      },
+      {
+        "normalized_surface": "nest one",
+        "ORG": 3,
+        "GEO": 21,
+        "total": 24
+      },
+      {
+        "normalized_surface": "humo",
+        "ORG": 18,
+        "GEO": 3,
+        "total": 21
+      },
+      {
+        "normalized_surface": "xorazm",
+        "ORG": 3,
+        "GEO": 14,
+        "total": 17
+      },
+      {
+        "normalized_surface": "seul",
+        "ORG": 3,
+        "GEO": 14,
+        "total": 17
+      },
+      {
+        "normalized_surface": "милан",
+        "ORG": 7,
+        "GEO": 3,
+        "total": 10
+      },
+      {
+        "normalized_surface": "eron",
+        "ORG": 2,
+        "GEO": 290,
+        "total": 292
+      },
+      {
+        "normalized_surface": "ўзбекистон",
+        "ORG": 2,
+        "GEO": 232,
+        "total": 234
+      },
+      {
+        "normalized_surface": "мурод билдинг",
+        "ORG": 69,
+        "GEO": 2,
+        "total": 71
+      },
+      {
+        "normalized_surface": "belarus",
+        "ORG": 2,
+        "GEO": 30,
+        "total": 32
+      },
+      {
+        "normalized_surface": "barcelona",
+        "ORG": 26,
+        "GEO": 2,
+        "total": 28
+      },
+      {
+        "normalized_surface": "milan",
+        "ORG": 18,
+        "GEO": 2,
+        "total": 20
+      },
+      {
+        "normalized_surface": "janubiy koreya",
+        "ORG": 2,
+        "GEO": 18,
+        "total": 20
+      }
+    ]
+  },
+  "models": {
+    "mmbert_bilou_viterbi": {
+      "overall": {
+        "gold": {
+          "total": 5379,
+          "ORG": 2659,
+          "GEO": 2720
+        },
+        "exact_correct": {
+          "total": 4615,
+          "ORG": 2182,
+          "GEO": 2433
+        },
+        "exact_boundary_org_geo_confusions": {
+          "total": 64,
+          "ORG_to_GEO": 31,
+          "GEO_to_ORG": 33
+        },
+        "other_exact_label": {
+          "total": 8,
+          "gold_ORG": 6,
+          "gold_GEO": 2
+        },
+        "no_exact_boundary": {
+          "total": 692,
+          "gold_ORG": 440,
+          "gold_GEO": 252
+        },
+        "rates": {
+          "ORG_to_GEO_per_gold_ORG": 0.011658518239939826,
+          "GEO_to_ORG_per_gold_GEO": 0.01213235294117647,
+          "ORG_GEO_confusion_per_focus_gold": 0.01189812232757018,
+          "exact_correct_per_focus_gold": 0.8579661647146309
+        }
+      },
+      "by_document_character_length": {
+        "0000-0128": {
+          "gold": {
+            "total": 548,
+            "ORG": 326,
+            "GEO": 222
+          },
+          "exact_correct": {
+            "total": 449,
+            "ORG": 254,
+            "GEO": 195
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 9,
+            "ORG_to_GEO": 6,
+            "GEO_to_ORG": 3
+          },
+          "other_exact_label": {
+            "total": 2,
+            "gold_ORG": 2,
+            "gold_GEO": 0
+          },
+          "no_exact_boundary": {
+            "total": 88,
+            "gold_ORG": 64,
+            "gold_GEO": 24
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.018404907975460124,
+            "GEO_to_ORG_per_gold_GEO": 0.013513513513513514,
+            "ORG_GEO_confusion_per_focus_gold": 0.016423357664233577,
+            "exact_correct_per_focus_gold": 0.8193430656934306
+          }
+        },
+        "0129-0512": {
+          "gold": {
+            "total": 1296,
+            "ORG": 674,
+            "GEO": 622
+          },
+          "exact_correct": {
+            "total": 1055,
+            "ORG": 513,
+            "GEO": 542
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 22,
+            "ORG_to_GEO": 11,
+            "GEO_to_ORG": 11
+          },
+          "other_exact_label": {
+            "total": 3,
+            "gold_ORG": 2,
+            "gold_GEO": 1
+          },
+          "no_exact_boundary": {
+            "total": 216,
+            "gold_ORG": 148,
+            "gold_GEO": 68
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.016320474777448073,
+            "GEO_to_ORG_per_gold_GEO": 0.017684887459807074,
+            "ORG_GEO_confusion_per_focus_gold": 0.016975308641975308,
+            "exact_correct_per_focus_gold": 0.8140432098765432
+          }
+        },
+        "0513-2048": {
+          "gold": {
+            "total": 2457,
+            "ORG": 1188,
+            "GEO": 1269
+          },
+          "exact_correct": {
+            "total": 2178,
+            "ORG": 1003,
+            "GEO": 1175
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 24,
+            "ORG_to_GEO": 11,
+            "GEO_to_ORG": 13
+          },
+          "other_exact_label": {
+            "total": 2,
+            "gold_ORG": 2,
+            "gold_GEO": 0
+          },
+          "no_exact_boundary": {
+            "total": 253,
+            "gold_ORG": 172,
+            "gold_GEO": 81
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.009259259259259259,
+            "GEO_to_ORG_per_gold_GEO": 0.01024428684003152,
+            "ORG_GEO_confusion_per_focus_gold": 0.009768009768009768,
+            "exact_correct_per_focus_gold": 0.8864468864468864
+          }
+        },
+        "2049+": {
+          "gold": {
+            "total": 1078,
+            "ORG": 471,
+            "GEO": 607
+          },
+          "exact_correct": {
+            "total": 933,
+            "ORG": 412,
+            "GEO": 521
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 9,
+            "ORG_to_GEO": 3,
+            "GEO_to_ORG": 6
+          },
+          "other_exact_label": {
+            "total": 1,
+            "gold_ORG": 0,
+            "gold_GEO": 1
+          },
+          "no_exact_boundary": {
+            "total": 135,
+            "gold_ORG": 56,
+            "gold_GEO": 79
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.006369426751592357,
+            "GEO_to_ORG_per_gold_GEO": 0.009884678747940691,
+            "ORG_GEO_confusion_per_focus_gold": 0.008348794063079777,
+            "exact_correct_per_focus_gold": 0.865491651205937
+          }
+        }
+      },
+      "prediction_boundaries_with_multiple_labels": 0
+    },
+    "span_stacker_bilou_dual_decode_oof": {
+      "overall": {
+        "gold": {
+          "total": 5379,
+          "ORG": 2659,
+          "GEO": 2720
+        },
+        "exact_correct": {
+          "total": 4675,
+          "ORG": 2219,
+          "GEO": 2456
+        },
+        "exact_boundary_org_geo_confusions": {
+          "total": 28,
+          "ORG_to_GEO": 16,
+          "GEO_to_ORG": 12
+        },
+        "other_exact_label": {
+          "total": 6,
+          "gold_ORG": 3,
+          "gold_GEO": 3
+        },
+        "no_exact_boundary": {
+          "total": 670,
+          "gold_ORG": 421,
+          "gold_GEO": 249
+        },
+        "rates": {
+          "ORG_to_GEO_per_gold_ORG": 0.006017299736743136,
+          "GEO_to_ORG_per_gold_GEO": 0.004411764705882353,
+          "ORG_GEO_confusion_per_focus_gold": 0.005205428518311954,
+          "exact_correct_per_focus_gold": 0.869120654396728
+        }
+      },
+      "by_document_character_length": {
+        "0000-0128": {
+          "gold": {
+            "total": 548,
+            "ORG": 326,
+            "GEO": 222
+          },
+          "exact_correct": {
+            "total": 452,
+            "ORG": 255,
+            "GEO": 197
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 4,
+            "ORG_to_GEO": 2,
+            "GEO_to_ORG": 2
+          },
+          "other_exact_label": {
+            "total": 1,
+            "gold_ORG": 1,
+            "gold_GEO": 0
+          },
+          "no_exact_boundary": {
+            "total": 91,
+            "gold_ORG": 68,
+            "gold_GEO": 23
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.006134969325153374,
+            "GEO_to_ORG_per_gold_GEO": 0.009009009009009009,
+            "ORG_GEO_confusion_per_focus_gold": 0.0072992700729927005,
+            "exact_correct_per_focus_gold": 0.8248175182481752
+          }
+        },
+        "0129-0512": {
+          "gold": {
+            "total": 1296,
+            "ORG": 674,
+            "GEO": 622
+          },
+          "exact_correct": {
+            "total": 1085,
+            "ORG": 533,
+            "GEO": 552
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 10,
+            "ORG_to_GEO": 7,
+            "GEO_to_ORG": 3
+          },
+          "other_exact_label": {
+            "total": 0,
+            "gold_ORG": 0,
+            "gold_GEO": 0
+          },
+          "no_exact_boundary": {
+            "total": 201,
+            "gold_ORG": 134,
+            "gold_GEO": 67
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.010385756676557863,
+            "GEO_to_ORG_per_gold_GEO": 0.00482315112540193,
+            "ORG_GEO_confusion_per_focus_gold": 0.007716049382716049,
+            "exact_correct_per_focus_gold": 0.8371913580246914
+          }
+        },
+        "0513-2048": {
+          "gold": {
+            "total": 2457,
+            "ORG": 1188,
+            "GEO": 1269
+          },
+          "exact_correct": {
+            "total": 2205,
+            "ORG": 1013,
+            "GEO": 1192
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 10,
+            "ORG_to_GEO": 5,
+            "GEO_to_ORG": 5
+          },
+          "other_exact_label": {
+            "total": 2,
+            "gold_ORG": 2,
+            "gold_GEO": 0
+          },
+          "no_exact_boundary": {
+            "total": 240,
+            "gold_ORG": 168,
+            "gold_GEO": 72
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.004208754208754209,
+            "GEO_to_ORG_per_gold_GEO": 0.003940110323089046,
+            "ORG_GEO_confusion_per_focus_gold": 0.00407000407000407,
+            "exact_correct_per_focus_gold": 0.8974358974358975
+          }
+        },
+        "2049+": {
+          "gold": {
+            "total": 1078,
+            "ORG": 471,
+            "GEO": 607
+          },
+          "exact_correct": {
+            "total": 933,
+            "ORG": 418,
+            "GEO": 515
+          },
+          "exact_boundary_org_geo_confusions": {
+            "total": 4,
+            "ORG_to_GEO": 2,
+            "GEO_to_ORG": 2
+          },
+          "other_exact_label": {
+            "total": 3,
+            "gold_ORG": 0,
+            "gold_GEO": 3
+          },
+          "no_exact_boundary": {
+            "total": 138,
+            "gold_ORG": 51,
+            "gold_GEO": 87
+          },
+          "rates": {
+            "ORG_to_GEO_per_gold_ORG": 0.004246284501061571,
+            "GEO_to_ORG_per_gold_GEO": 0.0032948929159802307,
+            "ORG_GEO_confusion_per_focus_gold": 0.0037105751391465678,
+            "exact_correct_per_focus_gold": 0.865491651205937
+          }
+        }
+      },
+      "prediction_boundaries_with_multiple_labels": 0
+    }
+  },
+  "pairwise_audited_models": {
+    "model_order": [
+      "mmbert_bilou_viterbi",
+      "span_stacker_bilou_dual_decode_oof"
+    ],
+    "focus_gold_spans": 5379,
+    "all_models_exact_correct": 4529,
+    "all_models_same_opposite_label": 25,
+    "outcome_cross_tab": {
+      "exact_correct | exact_correct": 4529,
+      "exact_correct | no_exact_boundary": 84,
+      "exact_correct | opposite_label": 1,
+      "exact_correct | other_exact_label": 1,
+      "no_exact_boundary | exact_correct": 124,
+      "no_exact_boundary | no_exact_boundary": 565,
+      "no_exact_boundary | opposite_label": 2,
+      "no_exact_boundary | other_exact_label": 1,
+      "opposite_label | exact_correct": 20,
+      "opposite_label | no_exact_boundary": 19,
+      "opposite_label | opposite_label": 25,
+      "other_exact_label | exact_correct": 2,
+      "other_exact_label | no_exact_boundary": 2,
+      "other_exact_label | other_exact_label": 4
+    }
+  },
+  "source_consensus": {
+    "source_models": [
+      "mmbert_bilou_viterbi",
+      "mmbert_bilou_argmax",
+      "mmbert_bio",
+      "xlmr",
+      "crf",
+      "suffix_lexicon",
+      "exact_lexicon"
+    ],
+    "threshold": {
+      "fraction": 0.7,
+      "minimum_opposite_votes": 5,
+      "number_of_sources": 7
+    },
+    "summary": {
+      "focus_gold_spans": 5379,
+      "at_least_one_source_exact_boundary": 5097,
+      "high_consensus_correct": 3783,
+      "high_consensus_opposite": 8,
+      "high_consensus_opposite_all_audited_opposite": 7,
+      "high_consensus_opposite_in_le_128": 1,
+      "high_consensus_opposite_training_majority_is_opposite": 7
+    },
+    "opposite_vote_histogram": {
+      "0": 5219,
+      "1": 95,
+      "2": 24,
+      "3": 27,
+      "4": 6,
+      "5": 3,
+      "6": 0,
+      "7": 5
+    },
+    "suspicious_annotation_candidates": [
+      {
+        "hash": "01b4b442559c4f8c3c2daabb3d4cd73920260303",
+        "document_character_length": 349,
+        "document_length_bucket": "0129-0512",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 306,
+          "end": 317,
+          "surface": "Oʻzbekiston"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 7,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 7
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [
+              "GEO"
+            ],
+            "exact_lexicon": [
+              "GEO"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 8,
+          "NAME": 0,
+          "GEO": 650
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite",
+          "surface_has_mixed_ORG_GEO_training_labels"
+        ],
+        "context": "isobidagi gʻalabasi bilan yakunlandi. 2026 yilgi Ayollar Osiyo kubogi Shimoliy Koreya 3:0 Oʻzbekiston Gollar: 6,24,41 - Myong Ju-Jong"
+      },
+      {
+        "hash": "994d61608980e592907e73a9340589fb20250826",
+        "document_character_length": 290,
+        "document_length_bucket": "0129-0512",
+        "entity": {
+          "gold_label": "GEO",
+          "consensus_opposite_label": "ORG",
+          "start": 129,
+          "end": 144,
+          "surface": "Murad Buildings"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 7,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 7,
+            "NAME": 0,
+            "GEO": 0
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "ORG"
+            ],
+            "mmbert_bilou_argmax": [
+              "ORG"
+            ],
+            "mmbert_bio": [
+              "ORG"
+            ],
+            "xlmr": [
+              "ORG"
+            ],
+            "crf": [
+              "ORG"
+            ],
+            "suffix_lexicon": [
+              "ORG"
+            ],
+            "exact_lexicon": [
+              "ORG"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "ORG"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "ORG"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 304,
+          "NAME": 0,
+          "GEO": 3
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite",
+          "surface_has_mixed_ORG_GEO_training_labels"
+        ],
+        "context": "omagazinga kirib sotuvchi qizga: - Singlim mеni xotinim oʻlganiga 3 yil boʻldi, 5 xonalik Murad Buildings domida bitta oʻzim yashayman, zеrikib kеtdim, bitta yaxshi zotdor mushuk bеrsеz, - dеsa S"
+      },
+      {
+        "hash": "08c2bd62c9ff41fb196c2fd03dfdf77a20260304",
+        "document_character_length": 3759,
+        "document_length_bucket": "2049+",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 1680,
+          "end": 1686,
+          "surface": "Buxoro"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 7,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 7
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [
+              "GEO"
+            ],
+            "exact_lexicon": [
+              "GEO"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 9,
+          "NAME": 0,
+          "GEO": 36
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite",
+          "surface_has_mixed_ORG_GEO_training_labels"
+        ],
+        "context": "ov va Shohruh Gadoyev kabi tajribali futbolchilar uch ochko uchun harakat qilishdi, biroq Buxoro himoyasi bardosh berdi. \"Lokomotiv\" - \"Surxon\" (3:1) Toshkentdagi \"temiryoʻlchilar\"ning g"
+      },
+      {
+        "hash": "c2fec63843bf70ff35959d00c907376220260508",
+        "document_character_length": 683,
+        "document_length_bucket": "0513-2048",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 41,
+          "end": 51,
+          "surface": "Magic City"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 7,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 7
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [
+              "GEO"
+            ],
+            "exact_lexicon": [
+              "GEO"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 1,
+          "NAME": 0,
+          "GEO": 12
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite",
+          "surface_has_mixed_ORG_GEO_training_labels"
+        ],
+        "context": "Xotira va qadrlash kuni munosabati bilan Magic City va Pepsi sizni bayramona shou dasturiga taklif qiladi! Faqat 9, 10 va 11-may kunlari siz"
+      },
+      {
+        "hash": "01b4b442559c4f8c3c2daabb3d4cd73920260303",
+        "document_character_length": 349,
+        "document_length_bucket": "0129-0512",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 286,
+          "end": 301,
+          "surface": "Shimoliy Koreya"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 7,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 7
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [
+              "GEO"
+            ],
+            "exact_lexicon": [
+              "GEO"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 0,
+          "NAME": 0,
+          "GEO": 10
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite"
+        ],
+        "context": "himoliklarning 3:0 hisobidagi gʻalabasi bilan yakunlandi. 2026 yilgi Ayollar Osiyo kubogi Shimoliy Koreya 3:0 Oʻzbekiston Gollar: 6,24,41 - Myong Ju-Jong"
+      },
+      {
+        "hash": "5d0e6695c728d62b",
+        "document_character_length": 791,
+        "document_length_bucket": "0513-2048",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 677,
+          "end": 684,
+          "surface": "Andijon"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 5,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 5
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [],
+            "exact_lexicon": []
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 21,
+          "NAME": 0,
+          "GEO": 54
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite",
+          "training_surface_majority_is_opposite",
+          "surface_has_mixed_ORG_GEO_training_labels"
+        ],
+        "context": "rimfinalga yoʻl olishgan edi. Oʻzbekiston Kubogi, 1/4 final. 19 sentabr, Andijon Andijon (Andijon) - Bunyodkor (Toshkent) - 1:2 Gollar: Davron Isoqov (40) - Mirjamol Qosimov (14), Shahzod"
+      },
+      {
+        "hash": "5cb62d35d011e58bfa0cb4a0d2a637d220260301",
+        "document_character_length": 146,
+        "document_length_bucket": "0129-0512",
+        "entity": {
+          "gold_label": "ORG",
+          "consensus_opposite_label": "GEO",
+          "start": 8,
+          "end": 30,
+          "surface": "Rossiya imperiyasining"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 5,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 0,
+            "NAME": 0,
+            "GEO": 5
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [
+              "GEO"
+            ],
+            "mmbert_bilou_argmax": [
+              "GEO"
+            ],
+            "mmbert_bio": [
+              "GEO"
+            ],
+            "xlmr": [
+              "GEO"
+            ],
+            "crf": [
+              "GEO"
+            ],
+            "suffix_lexicon": [],
+            "exact_lexicon": []
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [
+            "GEO"
+          ],
+          "span_stacker_bilou_dual_decode_oof": [
+            "GEO"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 0,
+          "NAME": 0,
+          "GEO": 0
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "all_audited_models_predict_opposite"
+        ],
+        "context": "[22/40] Rossiya imperiyasining Turkiston viloyati gubernatori qaysi javobda TOʻGʻRI koʻrsatilgan? * Kuropatkin * Krijano"
+      },
+      {
+        "hash": "0170a2db52d1a1018a4fbe0d6760d84620260309",
+        "document_character_length": 62,
+        "document_length_bucket": "0000-0128",
+        "entity": {
+          "gold_label": "GEO",
+          "consensus_opposite_label": "ORG",
+          "start": 18,
+          "end": 23,
+          "surface": "Oq Uy"
+        },
+        "source_votes": {
+          "true_label": 0,
+          "opposite_label": 5,
+          "threshold": 5,
+          "number_of_sources": 7,
+          "by_label": {
+            "ORG": 5,
+            "NAME": 0,
+            "GEO": 0
+          },
+          "by_source": {
+            "mmbert_bilou_viterbi": [],
+            "mmbert_bilou_argmax": [],
+            "mmbert_bio": [
+              "ORG"
+            ],
+            "xlmr": [
+              "ORG"
+            ],
+            "crf": [
+              "ORG"
+            ],
+            "suffix_lexicon": [
+              "ORG"
+            ],
+            "exact_lexicon": [
+              "ORG"
+            ]
+          }
+        },
+        "audited_model_boundary_labels": {
+          "mmbert_bilou_viterbi": [],
+          "span_stacker_bilou_dual_decode_oof": [
+            "ORG"
+          ]
+        },
+        "training_normalized_surface_counts": {
+          "ORG": 4,
+          "NAME": 0,
+          "GEO": 0
+        },
+        "signals": [
+          "source_consensus_opposes_gold",
+          "training_surface_majority_is_opposite"
+        ],
+        "context": "Uzoq kutilgan UFC Oq Uy fayt kardi nega kutilganidek boʻlmadi?"
+      }
+    ],
+    "candidate_count_before_example_limit": 8,
+    "interpretation_warning": "These are review candidates, not proven annotation errors. The source models are correlated, and the stacker is trained from their predictions."
+  }
+}
