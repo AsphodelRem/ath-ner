@@ -1,0 +1,11 @@
+# API image must also build on Linux ARM64 (Docker Desktop on Apple Silicon).
+# The CUDA-specific ``torch==2.6.0+cu124`` from requirements.txt has no ARM64
+# wheel, so the service uses the portable PyPI build. Training requirements
+# remain unchanged in requirements.txt.
+torch==2.6.0
+transformers==5.14.1
+tokenizers==0.22.2
+tqdm==4.70.0
+fastapi==0.124.0
+uvicorn==0.38.0
+pydantic==2.12.5

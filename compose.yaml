@@ -1,0 +1,25 @@
+services:
+  ner-api:
+    image: ner-uz-solution:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      NER_DEVICE: "${NER_DEVICE:-auto}"
+      NER_BATCH_SIZE: "${NER_BATCH_SIZE:-16}"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_DATASETS_OFFLINE: "1"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).read()"
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      retries: 5
+    init: true
