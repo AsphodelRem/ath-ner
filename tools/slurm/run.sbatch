@@ -17,32 +17,6 @@
 #
 #   sbatch --array=1 tools/slurm/run.sbatch                # один прогон
 #   sbatch tools/slurm/run.sbatch                          # всё подряд
-#
-# %1 держит по одному прогону на карту. Завершённые пропускаются, поэтому
-# после обрыва достаточно поставить ту же команду заново.
-#
-# Веса скачать заранее на ноде с сетью (ниже в комментарии — команды).
-# ==========================================================================
-#
-# hf download facebook/xlm-v-base --revision 68c75dd7733d \
-#     --local-dir /userspace/kms/models/xlm-v-base \
-#     --include "config.json" "tokenizer.json" "sentencepiece.bpe.model" "pytorch_model.bin"
-# hf download google/rembert --revision 65da5133da36 \
-#     --local-dir /userspace/kms/models/rembert \
-#     --include "config.json" "tokenizer.json" "tokenizer_config.json" \
-#               "special_tokens_map.json" "sentencepiece.model" "pytorch_model.bin"
-# hf download sentence-transformers/LaBSE --revision 836121a0533e \
-#     --local-dir /userspace/kms/models/labse \
-#     --include "config.json" "tokenizer.json" "tokenizer_config.json" \
-#               "special_tokens_map.json" "vocab.txt" "model.safetensors"
-# hf download BAAI/bge-m3 --revision 5617a9f61b02 \
-#     --local-dir /userspace/kms/models/bge-m3 \
-#     --include "config.json" "tokenizer.json" "tokenizer_config.json" \
-#               "special_tokens_map.json" "sentencepiece.bpe.model" "pytorch_model.bin"
-#
-# У XLM-V, RemBERT и BGE-M3 нет safetensors, только pytorch_model.bin —
-# поэтому списки файлов индивидуальные, а не общий --exclude "*.bin".
-
 # ---------------------------------------------------------------- переменные
 project_root="/userspace/kms/Code/ner-uz"
 miniconda_dir="/userspace/kms/miniconda3"
@@ -59,8 +33,6 @@ source "${miniconda_dir}/etc/profile.d/conda.sh"
 conda activate "${conda_env}"
 
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
-# Обе переменные явно: HF_HUB_CACHE имеет приоритет над путём из HF_HOME,
-# и унаследованное из профиля значение молча перебьёт настройку.
 export HF_HOME="${cache_dir}/huggingface"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export TORCH_HOME="${cache_dir}/torch_cache"
@@ -77,30 +49,19 @@ cd "${project_root}"
 
 # ------------------------------------------------------------- конфигурации
 # Лучшее на сегодня: large-s42 = 0.8987, glot500-s42 = 0.8853, xlmr-s42 = 0.8772.
-#
-# --no-gradient-checkpointing: пресет laptop включает его ради 6 ГБ VRAM,
-# а на A100 large занимает 11 ГБ из 80, и пересчёт активаций только тормозит.
 BASE_ARGS=(--tag-scheme bilou --max-length 512 --stride 128
-           --no-gradient-checkpointing
            --viterbi --transition-weight 0.25 --transition-mode conditional
            --patience 3 --eval-batch-size 32
            --comet offline --comet-project uzbek-ner)
 
 # индекс | имя прогона | каталог модели | дополнительные аргументы
 EXPERIMENTS=(
-  # --- 0-3: энкодеры. Исчерпана ли тема сегментации? У BGE-M3 словарь XLM-R,
-  #          поэтому его прирост был бы чистым эффектом контрастивного обучения.
   "xlmv-s42|${models_dir}/xlm-v-base|--seed 42 --learning-rate 3e-5 --epochs 10 --batch-size 32 --gradient-accumulation-steps 1"
   "rembert-s42|${models_dir}/rembert|--seed 42 --learning-rate 1e-5 --epochs 12 --batch-size 16 --gradient-accumulation-steps 2"
   "labse-s42|${models_dir}/labse|--seed 42 --learning-rate 3e-5 --epochs 10 --batch-size 32 --gradient-accumulation-steps 1"
   "bgem3-s42|${models_dir}/bge-m3|--seed 42 --learning-rate 1e-5 --epochs 12 --batch-size 16 --gradient-accumulation-steps 2"
-
-  # --- 4-5: ёмкость. Сид 42 уже дал 0.8987 на восьми эпохах, лучшая была
-  #          седьмая — поэтому здесь 12 эпох, ранняя остановка разберётся.
   "large-s43|${models_dir}/xlm-roberta-large|--seed 43 --learning-rate 1e-5 --epochs 12 --batch-size 32 --gradient-accumulation-steps 1"
   "large-s44|${models_dir}/xlm-roberta-large|--seed 44 --learning-rate 1e-5 --epochs 12 --batch-size 32 --gradient-accumulation-steps 1"
-
-  # --- 6-8: данные и декодирование на Glot500.
   "glot500-s44|${models_dir}/glot500-base|--seed 44 --learning-rate 3e-5 --epochs 10 --batch-size 32 --gradient-accumulation-steps 1"
   "glot500-argmax|${models_dir}/glot500-base|@NO_VITERBI --seed 42 --learning-rate 3e-5 --epochs 10 --batch-size 32 --gradient-accumulation-steps 1"
   "large-external|${models_dir}/xlm-roberta-large|@TWO_STAGE --seed 42 --learning-rate 1e-5 --epochs 12 --batch-size 32 --gradient-accumulation-steps 1"
@@ -121,9 +82,6 @@ if [ -f "artifacts/${RUN_NAME}/dev_metrics.json" ]; then
   exit 0
 fi
 
-# ------------------------------------------------------- проверка весов
-# Нода изолирована, поэтому падаем сразу и понятно, а не через сто строк
-# traceback из недр transformers.
 python3 -c "
 import sys
 from transformers import AutoConfig, AutoTokenizer
@@ -141,21 +99,17 @@ print(f'веса на месте: словарь {tokenizer.vocab_size}, окн�
   exit 1
 }
 
-# ------------------------------------------------------------------- обучение
-# EXTRA намеренно без кавычек: нужно разбиение на отдельные аргументы.
 case "${EXTRA}" in
   @NO_VITERBI*)
     # Собираем аргументы заново, без флагов Витерби.
     python3 -m solution.train --model-name "${MODEL}" \
         --tag-scheme bilou --max-length 512 --stride 128 \
-        --no-gradient-checkpointing --patience 3 --eval-batch-size 32 \
+        --patience 3 --eval-batch-size 32 \
         --comet offline --comet-project uzbek-ner --comet-tag "${RUN_NAME}" \
         ${EXTRA#@NO_VITERBI} \
         --output-dir "artifacts/${RUN_NAME}" >> "${log_file}" 2>&1
     ;;
   @TWO_STAGE*)
-    # Стадия 1: прогрев на внешнем корпусе. Мало эпох и низкий lr —
-    # разметка там неполная (22% сущностей не размечено), переучиваться нельзя.
     if [ ! -f "artifacts/${RUN_NAME}-warmup/dev_metrics.json" ]; then
       echo "=== Стадия 1: прогрев на внешнем корпусе ===" >> "${log_file}"
       python3 -m solution.train --model-name "${MODEL}" \

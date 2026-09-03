@@ -12,16 +12,6 @@
 #
 #   sbatch --nodelist=ngpu06 tools/slurm/augment.sbatch
 #   sbatch --array=1 tools/slurm/augment.sbatch          # только подмена
-#
-# Контроль — уже посчитанный artifacts/glot500-s42 (micro F1 0.8853):
-# конфигурация здесь та же, отличаются только флаги аугментации.
-#
-# Ставим на Glot500, а не на large: разброс по сидам у Glot500 0,01-0,02
-# пункта, у large до 0,88 — там эффект утонет в шуме.
-#
-# Перед запуском скопировать на кластер два файла:
-#   scp solution/augment.py solution/train.py <хост>:<проект>/solution/
-# и проверить: python3 -m solution.augment
 # ==========================================================================
 
 # ---------------------------------------------------------------- переменные
@@ -75,8 +65,6 @@ if [ -f "artifacts/${RUN_NAME}/dev_metrics.json" ]; then
   exit 0
 fi
 
-# Веса и корректность аугментаций проверяем до обучения: нода изолирована,
-# а сдвиг координат сломал бы метрику молча.
 python3 -c "
 from transformers import AutoConfig, AutoTokenizer
 import sys
@@ -93,13 +81,10 @@ print(f'веса на месте, словарь {t.vocab_size}')
 python3 -m solution.augment >> "${log_file}" 2>&1 \
   || { echo "=== Остановлено: аугментации не прошли самопроверку ===" >> "${log_file}"; exit 1; }
 
-# ------------------------------------------------------------------- обучение
-# ${AUG} намеренно без кавычек: нужно разбиение на отдельные аргументы.
 echo "=== Обучение ${RUN_NAME} ===" >> "${log_file}"
 python3 -m solution.train \
     --model-name "${model}" \
     --tag-scheme bilou --max-length 512 --stride 128 \
-    --no-gradient-checkpointing \
     --viterbi --transition-weight 0.25 --transition-mode conditional \
     ${AUG} \
     --batch-size 32 --gradient-accumulation-steps 1 \

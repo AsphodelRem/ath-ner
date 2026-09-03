@@ -19,27 +19,6 @@
 #   sbatch --array=1-2%1 tools/slurm/pretrain.sbatch      # MLM уже готов
 #
 # %1 обязателен: задачи 1 и 2 используют результат задачи 0.
-#
-# Два сида, а не один: разброс large по сидам достигает 0,88 пункта
-# (0,8987 / 0,8899 / 0,8707). По одному прогону эффект адаптации не отличить
-# от везения — мы на этом уже обжигались.
-#
-# ---------- ПОДГОТОВКА, на логин-ноде (нужна сеть) ------------------------
-#
-#   pip install accelerate        # Trainer без него не работает
-#
-#   python3 tools/prepare_pretrain.py \
-#       --sources telegram:all,books-cyr:3,news:2,books-lat:2 \
-#       --tokenizer /userspace/kms/models/xlm-roberta-large \
-#       --max-tokens 300000000 \
-#       --output data/pretrain/corpus.jsonl
-#
-# Токенизатор указывайте тот же, на котором обучаете: фертильность у моделей
-# разная (2,43-2,67 симв./токен у xlm-roberta, иначе у glot500), и без
-# калибровки бюджет промахивается на десятки процентов.
-#
-# Доступного текста заведомо избыточно: телеграм даёт 81 млн токенов,
-# кириллические книги ~4,9 млрд. Ограничение — время счёта, а не данные.
 # ==========================================================================
 
 # ---------------------------------------------------------------- переменные
@@ -110,8 +89,6 @@ case "${SLURM_ARRAY_TASK_ID}" in
       exit 1
     fi
 
-    # Число шагов берём из манифеста, а не задаём вслепую: иначе оно
-    # разъедется с реальным объёмом корпуса.
     MAX_STEPS="${MAX_STEPS:-$(python3 -c "
 import json, sys
 try:
@@ -168,12 +145,9 @@ print('  по источникам:', m['by_source'])
     echo "=== Стадия 2: NER, сид ${SEED} ===" >> "${log_file}"
     cat "${mlm_dir}/model/pretrain_info.json" >> "${log_file}"
 
-    # Конфигурация ровно как у large-s42 (0.8987): меняется только энкодер,
-    # поэтому сравнение чистое.
     python3 -m solution.train \
         --model-name "${mlm_dir}/model" \
         --tag-scheme bilou --max-length 512 --stride 128 \
-        --no-gradient-checkpointing \
         --viterbi --transition-weight 0.25 --transition-mode conditional \
         --batch-size 32 --gradient-accumulation-steps 1 \
         --learning-rate "${ner_lr}" --epochs 12 --patience 3 --eval-batch-size 32 \
