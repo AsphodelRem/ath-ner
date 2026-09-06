@@ -1,0 +1,58 @@
+{
+  "sources": "telegram:all,books-cyr:3,news:2,books-lat:2,wiki-ru:1,wiki-en:1",
+  "documents": 405585,
+  "characters": 772683288,
+  "estimated_tokens": 220755753,
+  "chars_per_token_used": 3.5,
+  "chars_per_token_calibrated": true,
+  "tokenizer": "/userspace/kms/models/xlm-roberta-large",
+  "by_source": {
+    "telegram": 207909,
+    "books-cyr": 46704,
+    "news": 77557,
+    "books-lat": 46709,
+    "wiki-ru": 17552,
+    "wiki-en": 9154
+  },
+  "foreign_share_requested": 0.08,
+  "foreign_share_actual": 0.0808,
+  "foreign_by_source": {
+    "wiki-ru": 0.0404,
+    "wiki-en": 0.0404
+  },
+  "share_by_source": {
+    "telegram": 0.2227,
+    "books-cyr": 0.2322,
+    "news": 0.2322,
+    "books-lat": 0.2322,
+    "wiki-ru": 0.0404,
+    "wiki-en": 0.0404
+  },
+  "by_script": {
+    "латиница": 180433,
+    "обе графики": 140225,
+    "кириллица": 84927
+  },
+  "filters": {
+    "прочитано документов": 521353,
+    "пассажей": 806178,
+    "held-out": 2000,
+    "OCR-шум": 248056,
+    "коротких": 128529,
+    "near-дубли": 11636,
+    "дубли по абзацам": 8461,
+    "записано": 405585,
+    "точные дубли": 1485,
+    "не похоже на узбекский": 426
+  },
+  "excluded_from": [
+    "data/train.jsonl",
+    "data/dev.jsonl"
+  ],
+  "output": "data/pretrain/corpus.jsonl",
+  "holdout": "data/pretrain/corpus.holdout.jsonl",
+  "holdout_documents": 2000,
+  "passage_chars": 4000,
+  "max_ocr_noise": 0.01,
+  "near_dedup_bands": 8
+}
