@@ -1,1 +1,1 @@
-"""Shared preprocessing used by training and service inference."""
+"""Минимальный multilingual Transformer baseline для Uzbek NER."""
