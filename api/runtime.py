@@ -1,4 +1,4 @@
-"""Predictor loading from the Hugging Face Hub and inference for the FastAPI service."""
+"""Offline predictor loading and model inference for the FastAPI service."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_MAX_LENGTH = 512
 DEFAULT_STRIDE = 128
 DEFAULT_BATCH_SIZE = 16
-DEFAULT_MODEL_REPO = "AsphodelRem/uz-ner-rembert"
 
 JsonObject = dict[str, Any]
 
@@ -28,8 +27,8 @@ class Predictor(Protocol):
 class EmptyPredictor:
     """Contract-compatible fallback used when no checkpoint is packaged.
 
-    Weights live on the Hub, not in the image. This fallback keeps the HTTP
-    contract testable when no repository is configured. Not for quality evaluation.
+    Weights are baked into the image at build time. This fallback keeps the HTTP
+    contract testable when they are absent. Not intended for quality evaluation.
     """
 
     def predict(self, records: list[JsonObject]) -> list[JsonObject]:
@@ -194,14 +193,13 @@ def _read_run_config(model_dir: Path) -> JsonObject:
 
 
 def _download_from_hub() -> Path | None:
-    """Fetches the checkpoint from the Hub.
+    """Fetches the checkpoint from the Hub. Development fallback only.
 
-    The image ships no weights, so this is the only model source. Requires
-    network access on startup; the download is cached under HF_HOME, so a
-    restart against a warm cache does not hit the network again.
+    The image ships weights baked in at build time, so the packaged container
+    never reaches this path: it runs offline, as the contract requires.
     """
 
-    repo = os.getenv("NER_MODEL_REPO", DEFAULT_MODEL_REPO)
+    repo = os.getenv("NER_MODEL_REPO")
     if not repo:
         return None
     if os.getenv("HF_HUB_OFFLINE", "0") not in {"0", "", "false", "False"}:
@@ -230,8 +228,6 @@ def _download_from_hub() -> Path | None:
 
 
 def _find_model_dir(root: Path) -> Path | None:
-    # NER_MODEL_DIR остаётся как операторское переопределение из API.md:
-    # им подсовывают уже скачанный снапшот, когда сети нет.
     explicit = os.getenv("NER_MODEL_DIR")
     if explicit:
         path = Path(explicit).expanduser().resolve()
@@ -239,6 +235,20 @@ def _find_model_dir(root: Path) -> Path | None:
             raise FileNotFoundError(f"NER_MODEL_DIR is not a checkpoint: {path}")
         return path
 
+    # Штатный путь: веса вшиты в образ на этапе сборки, сеть не нужна.
+    preferred = root / "artifacts" / "model"
+    if (preferred / "config.json").is_file():
+        return preferred
+
+    candidates = sorted((root / "artifacts").glob("*/model/config.json"))
+    if candidates:
+        def score(config_path: Path) -> float:
+            run_config = _read_run_config(config_path.parent)
+            return float(run_config.get("best_micro_f1", -1.0))
+
+        return max(candidates, key=score).parent
+
+    # Запасной путь для разработки: включается только явным NER_MODEL_REPO.
     return _download_from_hub()
 
 
@@ -248,6 +258,8 @@ def create_predictor(root: Path | None = None) -> Predictor:
     project_root = (root or Path(__file__).resolve().parents[1]).resolve()
     model_dir = _find_model_dir(project_root)
     if model_dir is None:
-        LOGGER.warning("No model repository configured; API starts in empty fallback mode")
+        LOGGER.warning(
+            "No checkpoint under %s/artifacts; API starts in empty fallback mode", project_root
+        )
         return EmptyPredictor()
     return TransformerPredictor(model_dir)
