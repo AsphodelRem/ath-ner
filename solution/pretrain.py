@@ -59,8 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=2)
-    # Низкий lr принципиален: на большом модель переучится на домен и потеряет
-    # мультиязычность, которая нужна для 5% нецелевых текстов в выборке.
+    # Низкий lr: на большом модель теряет мультиязычность, нужную для 5% выборки.
     parser.add_argument("--learning-rate", type=float, default=5e-5)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--warmup-ratio", type=float, default=0.06)
@@ -96,8 +95,7 @@ class PackedTextDataset(IterableDataset):
         self.tokenizer = tokenizer
         self.block_size = block_size
         self.single_pass = single_pass
-        # В transformers 5 нет build_inputs_with_special_tokens, поэтому обёртку
-        # выясняем у самого токенизатора — так код не привязан к архитектуре.
+        # Обёртку спецтокенов выясняем у самого токенизатора, а не по архитектуре.
         wrapper = tokenizer("", add_special_tokens=True)["input_ids"]
         middle = len(wrapper) // 2
         self.prefix, self.suffix = wrapper[:middle], wrapper[middle:]
@@ -327,13 +325,11 @@ def run(args: argparse.Namespace) -> int:
         eval_steps=args.eval_every,
         dataloader_num_workers=args.num_workers,
         gradient_checkpointing=args.gradient_checkpointing,
-        # Датасет отдаёт word_starts, а модель его не принимает: без этого
-        # Trainer вырежет поле до коллатора, и маскирование целых слов отвалится.
+        # Без этого Trainer вырежет word_starts до коллатора и маскирование слов отвалится.
         remove_unused_columns=False,
         report_to=report_to,
         seed=args.seed,
-        # В перенаправленном выводе tqdm пишет тысячи строк с возвратами
-        # каретки; в терминале он полезен, поэтому смотрим на TTY.
+        # В перенаправленном выводе tqdm пишет тысячи строк, поэтому смотрим на TTY.
         disable_tqdm=not sys.stdout.isatty(),
     )
 
@@ -345,9 +341,7 @@ def run(args: argparse.Namespace) -> int:
         data_collator=collator,
         callbacks=[StatusCallback(args.max_steps, tokens_per_step)],
     )
-    # resume_from_checkpoint=True требует существующего чекпоинта и падает,
-    # если его нет. Поэтому ищем последний сами: тогда --resume безопасен и
-    # при первом запуске, и при перезапуске после обрыва.
+    # resume_from_checkpoint=True падает без чекпоинта, поэтому ищем последний сами.
     last = get_last_checkpoint(str(args.output_dir)) if args.resume and args.output_dir.exists() else None
     if args.resume:
         print(f"Возобновление с {last}" if last else "Чекпоинта нет, старт с нуля")

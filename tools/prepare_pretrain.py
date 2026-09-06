@@ -36,9 +36,7 @@ SOURCES = {
     "books-cyr": ("tahrirchi/uz-books-v2", "cyr"),
     "books-lat": ("tahrirchi/uz-books-v2", "lat"),
     "books-train": ("tahrirchi/uz-books-v2", "train"),
-    # Иноязычная подмешка против катастрофического забывания: адаптация на
-    # чистом узбекском подъедает мультиязычность, а 5,2% нашей выборки —
-    # тексты на английском и русском, и они дают F1 0,90-0,93.
+    # Подмешка против забывания мультиязычности: 5,2% выборки — русский и английский.
     "wiki-ru": ("wikimedia/wikipedia", "20231101.ru"),
     "wiki-en": ("wikimedia/wikipedia", "20231101.en"),
 }
@@ -48,15 +46,11 @@ APOSTROPHES = "'‘’ʻʼʽ`´"
 CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 LATIN = re.compile(r"[A-Za-z]")
 LETTER = re.compile(r"[^\W\d_]", re.UNICODE)
-# Запасное значение, если токенизатор не передан. Измерено на источниках
-# для xlm-roberta-large: 2,67 у телеграма, 2,43 у кириллических книг.
-# Величина сильно зависит от графики и модели, поэтому лучше калибровать.
+# Запасное значение, если токенизатор не передан; лучше калибровать.
 CHARS_PER_TOKEN = 2.6
 CALIBRATION_SAMPLE = 200
 
-# Признаки OCR-шума, измеренные на кириллическом шарде uz-books-v2:
-# смешение алфавитов внутри слова 0,54%, одиночные буквы как слова 1,95%.
-# В чистом тексте оба показателя близки к нулю, поэтому пороги ставим низко.
+# Пороги OCR-шума: в чистом тексте оба показателя близки к нулю.
 MIXED_SCRIPT = re.compile(r"[A-Za-z][Ѐ-ӿ]|[Ѐ-ӿ][A-Za-z]")
 LETTER_DIGIT = re.compile(r"[^\W\d_][0-9]|[0-9][^\W\d_]", re.UNICODE)
 WORD = re.compile(r"\S+")
@@ -250,8 +244,7 @@ def iter_shard_texts(repo: str, split: str, limit: int | None) -> Iterator[str]:
     import pyarrow.parquet as pq
     from huggingface_hub import HfApi, hf_hub_download
 
-    # Две раскладки: у tahrirchi это data/<split>-00000-of-N.parquet,
-    # у wikimedia/wikipedia — <config>/train-00000-of-N.parquet.
+    # Две раскладки имён шардов: у tahrirchi и у wikimedia они разные.
     files = sorted(
         item.rfilename
         for item in HfApi().dataset_info(repo).siblings
@@ -301,13 +294,10 @@ def run(args: argparse.Namespace) -> int:
     total_chars = 0
     foreign_chars = 0
     budget_chars = int(args.max_tokens * chars_per_token)
-    # Квота иноязычных резервируется заранее: без этого узбекские источники
-    # выбирают весь бюджет и до подмешки дело не доходит вовсе.
+    # Квота иноязычных резервируется заранее, иначе бюджет выберут узбекские источники.
     foreign_budget = int(budget_chars * args.foreign_share)
     native_budget = budget_chars - foreign_budget
-    # Квота делится поровну между источниками каждой группы: без этого первый
-    # по порядку выбирает всё, а остальные получают по одному пассажу — состав
-    # корпуса определяется порядком в --sources, а не замыслом.
+    # Квота делится поровну внутри группы, иначе состав задаёт порядок в --sources.
     requested = [spec.split(":")[0].strip() for spec in args.sources.split(",") if spec.strip()]
     requested_foreign = [n for n in requested if n in FOREIGN]
     requested_native = [n for n in requested if n not in FOREIGN]
@@ -370,8 +360,7 @@ def run(args: argparse.Namespace) -> int:
                         continue
                     seen.add(key)
 
-                    # Первые --holdout пассажей уходят в отложенную выборку:
-                    # по ней меряется перплексия и решается, когда остановиться.
+                    # Первые --holdout пассажей уходят в отложенную выборку для перплексии.
                     target = holdout if stats["held-out"] < args.holdout else out
                     if target is holdout:
                         stats["held-out"] += 1
@@ -383,9 +372,7 @@ def run(args: argparse.Namespace) -> int:
                         if is_foreign:
                             foreign_chars += len(text)
                             foreign_by_source[name] += len(text)
-                        # Первые пассажи используем для калибровки бюджета:
-                        # брать константу вслепую значит промахнуться в
-                        # числе шагов обучения на десятки процентов.
+                        # Первые пассажи используем для калибровки бюджета.
                         if calibrator is not None and len(calibration) < CALIBRATION_SAMPLE:
                             calibration.append(text[:20000])
                             if len(calibration) == CALIBRATION_SAMPLE:
@@ -406,8 +393,7 @@ def run(args: argparse.Namespace) -> int:
                         print(f"    квота источника выбрана"
                               f" ({chars_by_source[name] / 1e6:.1f} млн символов)")
                         break
-                # Выход из цикла по пассажам не прекращает чтение документов —
-                # нужен явный второй выход, иначе бюджет не соблюдается.
+                # Нужен явный второй выход, иначе бюджет не соблюдается.
                 if source_full():
                     break
             if total_chars >= budget_chars:

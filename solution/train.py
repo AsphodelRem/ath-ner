@@ -1,10 +1,5 @@
 """Обучение NER с отбором чекпоинта по exact-span F1.
 
-Отличия от baseline/train.py:
-  * лучший чекпоинт выбирается по micro-F1 официального scorer, а не по dev_loss;
-  * предсказания на dev проходят постобработку границ (solution/postprocess.py);
-  * поддержаны bf16 и gradient checkpointing, чтобы обучение влезало в 6 ГБ VRAM.
-
 Пример пробного прогона на ноутбуке:
     python -m solution.train --preset laptop --output-dir artifacts/run01
 """
@@ -34,6 +29,7 @@ from transformers import (
 )
 
 from baseline.common import (
+    ENTITY_LABELS,
     load_fast_tokenizer,
     read_records,
     resolve_device,
@@ -61,7 +57,6 @@ PRESETS = {
         learning_rate=3e-5, epochs=4, limit=None, gradient_checkpointing=True,
     ),
     # A100: большая модель, широкое окно, без gradient checkpointing.
-    # При 40 ГБ и OOM используйте --batch-size 8 --gradient-accumulation-steps 4.
     "a100": dict(
         model_name="FacebookAI/xlm-roberta-large",
         max_length=512, stride=128, batch_size=16, gradient_accumulation_steps=2,
@@ -118,6 +113,32 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.5,
         help="какая доля сущностей внутри выбранной записи подменяется",
+    )
+    parser.add_argument(
+        "--augment-fragments",
+        type=float,
+        default=0.0,
+        help=(
+            "сколько коротких фрагментов нарезать из длинных текстов, долей от выборки "
+            "(0.5 = +50%% записей). На новых формах короткий текст даёт F1 0,654 против "
+            "0,844 у длинного — фрагменты учат узнавать имя без контекста"
+        ),
+    )
+    parser.add_argument(
+        "--augment-fragments-empty",
+        type=float,
+        default=0.0,
+        help="доля фрагментов без сущностей: учат молчать, но смещают выборку к классу O",
+    )
+    parser.add_argument(
+        "--length-weighting",
+        type=float,
+        default=0.0,
+        help=(
+            "вес окна (60 слов / длина записи) ** alpha: 0 — как раньше, 0.5 — умеренно, "
+            "1.0 — вклад записей уравнен. Тексты короче 10 слов это 30%% выборки, "
+            "но 2,6%% токенов и, значит, столько же градиента"
+        ),
     )
     parser.add_argument(
         "--trust-remote-code",
@@ -177,9 +198,39 @@ def set_seed(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
+class WeightedCollator:
+    """Обёртка над стандартным коллатором: вынимает вес окна до паддинга.
+
+    DataCollatorForTokenClassification попытался бы дополнить скалярный вес как
+    последовательность, поэтому забираем его заранее и возвращаем тензором.
+    """
+
+    def __init__(self, collator: DataCollatorForTokenClassification) -> None:
+        self.collator = collator
+
+    def __call__(self, features: list[JsonObject]) -> dict[str, torch.Tensor]:
+        weights = [feature.get("weight", 1.0) for feature in features]
+        stripped = [{k: v for k, v in feature.items() if k != "weight"} for feature in features]
+        batch = self.collator(stripped)
+        if any(weight != 1.0 for weight in weights):
+            batch["weight"] = torch.tensor(weights, dtype=torch.float32)
+        return batch
+
+
+def weighted_loss(logits: torch.Tensor, labels: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+    """Средний по окну loss, усреднённый по батчу с весами окон."""
+
+    per_token = torch.nn.functional.cross_entropy(
+        logits.transpose(1, 2).float(), labels, ignore_index=-100, reduction="none"
+    )
+    mask = (labels != -100).float()
+    per_window = (per_token * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1.0)
+    return (per_window * weights).sum() / weights.sum().clamp(min=1e-8)
+
+
 def build_loader(
     dataset: TokenizedNerDataset,
-    collator: DataCollatorForTokenClassification,
+    collator: WeightedCollator,
     batch_size: int,
     *,
     shuffle: bool,
@@ -213,11 +264,20 @@ def train_epoch(
     window_count = 0
     for index, batch in enumerate(tqdm(loader, desc="Train", unit="batch", leave=False), start=1):
         batch = {key: value.to(device) for key, value in batch.items()}
+        weights = batch.pop("weight", None)
+
+        def compute() -> torch.Tensor:
+            """Штатный loss модели либо взвешенный по окнам."""
+
+            if weights is None:
+                return model(**batch).loss
+            return weighted_loss(model(**batch).logits, batch["labels"], weights)
+
         if autocast_dtype is not None:
             with torch.autocast(device_type=device.type, dtype=autocast_dtype):
-                loss = model(**batch).loss
+                loss = compute()
         else:
-            loss = model(**batch).loss
+            loss = compute()
         (loss / gradient_accumulation_steps).backward()
         value = float(loss.item())
         total += value
@@ -318,8 +378,12 @@ def run(args: argparse.Namespace) -> int:
         case_probability=args.augment_case,
         swap_probability=args.augment_swap,
         swap_share=args.augment_swap_share,
+        fragment_share=args.augment_fragments,
+        fragment_keep_empty=args.augment_fragments_empty,
     )
-    collator = DataCollatorForTokenClassification(tokenizer, label_pad_token_id=-100)
+    collator = WeightedCollator(
+        DataCollatorForTokenClassification(tokenizer, label_pad_token_id=-100)
+    )
 
     def make_train_loader(epoch: int) -> tuple[DataLoader, int]:
         """Собирает загрузчик; при аугментациях выборка меняется каждую эпоху."""
@@ -332,6 +396,7 @@ def run(args: argparse.Namespace) -> int:
         dataset = NerDataset(
             records, tokenizer, max_length=args.max_length, stride=args.stride,
             scheme=args.tag_scheme, description=description,
+            length_weighting=args.length_weighting,
         )
         return build_loader(dataset, collator, args.batch_size, shuffle=True), len(dataset)
 
@@ -355,8 +420,7 @@ def run(args: argparse.Namespace) -> int:
             transitions_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
             log_transitions = build_log_transitions(payload, mode=args.transition_mode)
             print(f"Матрицы переходов оценены и сохранены: {transitions_path}")
-        # Множитель масштабирует логарифмы: 0 обнуляет влияние переходов,
-        # значения больше единицы делают ограничения жёстче.
+        # Множитель масштабирует логарифмы переходов: 0 обнуляет их влияние.
         log_transitions = log_transitions * args.transition_weight
     model = AutoModelForTokenClassification.from_pretrained(
         args.model_name,
@@ -405,6 +469,9 @@ def run(args: argparse.Namespace) -> int:
         "augment_case": args.augment_case,
         "augment_swap": args.augment_swap,
         "augment_swap_share": args.augment_swap_share if args.augment_swap else None,
+        "augment_fragments": args.augment_fragments,
+        "augment_fragments_empty": args.augment_fragments_empty if args.augment_fragments else None,
+        "length_weighting": args.length_weighting,
         "trust_remote_code": bool(args.trust_remote_code),
         "viterbi": bool(args.viterbi),
         "transition_weight": args.transition_weight if args.viterbi else None,

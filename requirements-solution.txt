@@ -1,0 +1,27 @@
+# Дополнения к requirements.txt, нужные нашему решению.
+# Файл кейса не трогаем: его SHA-256 зафиксирован в data/dataset_manifest.json.
+
+# numpy импортируется напрямую (solution/train.py, solution/viterbi.py).
+# Приходит транзитивно с torch, но полагаться на это не стоит.
+numpy>=1.24
+
+# hf CLI для предзагрузки весов и tools/prepare_external.py.
+huggingface_hub>=0.34
+
+# ОБЯЗАТЕЛЕН для стадии MLM: solution/pretrain.py обучает через
+# transformers.Trainer, а тот без accelerate не стартует вообще.
+accelerate>=1.14
+
+# Нужен только сборке корпуса: tools/prepare_pretrain.py читает
+# parquet-шарды датасетов напрямую, минуя datasets.
+pyarrow>=15
+
+# ОБЯЗАТЕЛЬНЫ для Glot500: в его репозитории нет tokenizer.json, только
+# sentencepiece-модель, и transformers конвертирует её на лету.
+# Для XLM-R не нужны — там tokenizer.json есть.
+sentencepiece>=0.2
+protobuf>=4
+
+# Опционально: нужен только при --comet online|offline.
+# Без него solution/tracking.py тихо переходит в режим заглушки.
+comet_ml==3.58.6

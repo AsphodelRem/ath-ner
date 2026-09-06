@@ -1,0 +1,19 @@
+# Проброс NVIDIA GPU в сервис. Отдельным файлом, а не в compose.yaml:
+# базовая сборка обязана подниматься на машине без GPU, а любой из способов
+# проброса там роняет запуск.
+#
+#   docker compose -f compose.yaml -f compose.gpu.yaml up -d
+#
+# Используется runtime: nvidia, а не deploy.resources.reservations.devices:
+# toolkit на этой машине настроен в режиме CDI и на путь через --gpus отвечает
+# "invoking the NVIDIA Container Runtime Hook directly is not supported".
+services:
+  ner-api:
+    runtime: nvidia
+    environment:
+      NER_DEVICE: "cuda"
+      # На 6 ГБ VRAM батч 16 при окне 512 упирается в память: RemBERT это
+      # 32 слоя при hidden 1152. Переопределяется переменной среды.
+      NER_BATCH_SIZE: "${NER_BATCH_SIZE:-8}"
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"

@@ -43,9 +43,7 @@ def normalize_span(text: str, start: int, end: int) -> tuple[int, int] | None:
     if not 0 <= start < end <= len(text):
         return None
 
-    # Внутренние кавычки намеренно не трогаем: в эталоне они встречаются
-    # внутри официальных названий (`Oʻzsuvta'minot" AJ`, `Боруссия"си`),
-    # и обрезка по ним портит 0,48% gold-спанов.
+    # Внутренние кавычки не трогаем: они встречаются внутри официальных названий.
     while start < end and text[start] in LEAD_STRIP:
         # Открывающая скобка со своей парой внутри спана — часть названия: (G)I-DLE.
         closing = BRACKET_PAIRS.get(text[start])
@@ -65,7 +63,7 @@ def normalize_span(text: str, start: int, end: int) -> tuple[int, int] | None:
         start -= 1
 
     # Конец внутри слова — дотягиваем аффикс: Toshkent -> Toshkentda.
-    # Только строчные буквы и апострофы, чтобы не склеить два слова.
+    # Только строчные и апострофы, чтобы не склеить два слова.
     if end < len(text) and _is_word_char(text[end]):
         cursor = end
         limit = min(len(text), end + MAX_SUFFIX)
