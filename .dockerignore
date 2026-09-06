@@ -13,5 +13,4 @@ data
 logs
 tools
 *.log
-artifacts/*.log
-artifacts/**/_original_*
+artifacts

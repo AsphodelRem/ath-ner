@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \
     HF_DATASETS_OFFLINE=1 \
     TOKENIZERS_PARALLELISM=false
@@ -17,6 +16,7 @@ COPY . .
 
 RUN addgroup --system ner \
     && adduser --system --ingroup ner --home /app ner \
+    && mkdir -p /app/.cache/huggingface \
     && chown -R ner:ner /app
 
 USER ner

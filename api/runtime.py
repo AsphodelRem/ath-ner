@@ -1,4 +1,4 @@
-"""Offline predictor loading and model inference for the FastAPI service."""
+"""Predictor loading from the Hugging Face Hub and inference for the FastAPI service."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_MAX_LENGTH = 512
 DEFAULT_STRIDE = 128
 DEFAULT_BATCH_SIZE = 16
+DEFAULT_MODEL_REPO = "AsphodelRem/uz-ner-rembert"
 
 JsonObject = dict[str, Any]
 
@@ -27,9 +28,8 @@ class Predictor(Protocol):
 class EmptyPredictor:
     """Contract-compatible fallback used when no checkpoint is packaged.
 
-    The repository intentionally does not contain trained weights. Keeping this
-    fallback makes the API and container testable before a checkpoint is copied
-    into ``artifacts/model``. It is not intended for quality evaluation.
+    Weights live on the Hub, not in the image. This fallback keeps the HTTP
+    contract testable when no repository is configured. Not for quality evaluation.
     """
 
     def predict(self, records: list[JsonObject]) -> list[JsonObject]:
@@ -106,10 +106,10 @@ class TransformerPredictor:
     def _load_transitions(self) -> Any:
         if not self._run_config.get("viterbi", False):
             return None
-        transitions_path = self._model_dir.parent / "transitions.json"
-        if not transitions_path.is_file():
+        transitions_path = _sidecar(self._model_dir, "transitions.json")
+        if transitions_path is None:
             raise FileNotFoundError(
-                f"Viterbi is enabled but transitions are missing: {transitions_path}"
+                f"Viterbi is enabled but transitions.json is missing near {self._model_dir}"
             )
         from solution.viterbi import load_transitions
 
@@ -170,9 +170,22 @@ def _validate_window(tokenizer: Any, max_length: int, stride: int) -> None:
         raise ValueError(f"stride must be between 0 and {content_length - 1}")
 
 
+def _sidecar(model_dir: Path, name: str) -> Path | None:
+    """Finds run_config.json / transitions.json next to the checkpoint.
+
+    A training run keeps them one level above ``model/``; a Hugging Face snapshot
+    is flat and keeps them beside the weights. Both layouts are accepted.
+    """
+
+    for candidate in (model_dir / name, model_dir.parent / name):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def _read_run_config(model_dir: Path) -> JsonObject:
-    path = model_dir.parent / "run_config.json"
-    if not path.is_file():
+    path = _sidecar(model_dir, "run_config.json")
+    if path is None:
         return {}
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -180,7 +193,45 @@ def _read_run_config(model_dir: Path) -> JsonObject:
     return payload
 
 
+def _download_from_hub() -> Path | None:
+    """Fetches the checkpoint from the Hub.
+
+    The image ships no weights, so this is the only model source. Requires
+    network access on startup; the download is cached under HF_HOME, so a
+    restart against a warm cache does not hit the network again.
+    """
+
+    repo = os.getenv("NER_MODEL_REPO", DEFAULT_MODEL_REPO)
+    if not repo:
+        return None
+    if os.getenv("HF_HUB_OFFLINE", "0") not in {"0", "", "false", "False"}:
+        raise RuntimeError("HF_HUB_OFFLINE forbids the network, but the model lives on the Hub")
+
+    from huggingface_hub import snapshot_download
+
+    revision = os.getenv("NER_MODEL_REVISION")
+    LOGGER.info("Downloading %s (revision=%s) from the Hub", repo, revision or "main")
+    path = Path(
+        snapshot_download(
+            repo_id=repo,
+            revision=revision,
+            token=os.getenv("HF_TOKEN") or None,
+            cache_dir=os.getenv("HF_HOME"),
+        )
+    )
+    # Репозиторий может повторять раскладку прогона (веса в model/) либо быть
+    # плоским, как принято на Hub. Сайдкары найдёт _sidecar в обоих случаях.
+    for candidate in (path / "model", path):
+        if (candidate / "config.json").is_file():
+            if revision is None:
+                LOGGER.warning("NER_MODEL_REVISION is unset: the served model may change")
+            return candidate
+    raise FileNotFoundError(f"{repo} does not look like a checkpoint: no config.json")
+
+
 def _find_model_dir(root: Path) -> Path | None:
+    # NER_MODEL_DIR остаётся как операторское переопределение из API.md:
+    # им подсовывают уже скачанный снапшот, когда сети нет.
     explicit = os.getenv("NER_MODEL_DIR")
     if explicit:
         path = Path(explicit).expanduser().resolve()
@@ -188,19 +239,7 @@ def _find_model_dir(root: Path) -> Path | None:
             raise FileNotFoundError(f"NER_MODEL_DIR is not a checkpoint: {path}")
         return path
 
-    preferred = root / "artifacts" / "model"
-    if (preferred / "config.json").is_file():
-        return preferred
-
-    candidates = sorted((root / "artifacts").glob("*/model/config.json"))
-    if not candidates:
-        return None
-
-    def score(config_path: Path) -> float:
-        run_config = _read_run_config(config_path.parent)
-        return float(run_config.get("best_micro_f1", -1.0))
-
-    return max(candidates, key=score).parent
+    return _download_from_hub()
 
 
 def create_predictor(root: Path | None = None) -> Predictor:
@@ -209,9 +248,6 @@ def create_predictor(root: Path | None = None) -> Predictor:
     project_root = (root or Path(__file__).resolve().parents[1]).resolve()
     model_dir = _find_model_dir(project_root)
     if model_dir is None:
-        LOGGER.warning(
-            "No checkpoint found under %s/artifacts; API starts in empty fallback mode",
-            project_root,
-        )
+        LOGGER.warning("No model repository configured; API starts in empty fallback mode")
         return EmptyPredictor()
     return TransformerPredictor(model_dir)

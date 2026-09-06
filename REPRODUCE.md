@@ -272,28 +272,43 @@ python scripts/evaluate_service.py \
 
 ## Сервис
 
-Точка работы задаётся файлами прогона: сервис читает `max_length`, `stride`,
-`postprocess`, `tag_scheme`, `viterbi`, `transition_mode`, `transition_weight`
-из `run_config.json`.
-
-```
-artifacts/
-├── model/
-│   ├── config.json
-│   ├── model.safetensors
-│   ├── tokenizer.json
-│   └── tokenizer_config.json
-├── run_config.json
-└── transitions.json
-```
+Веса в образ не входят: при старте сервис скачивает их с Hugging Face и кеширует.
+Точка работы читается из `run_config.json` рядом с чекпоинтом — `max_length`,
+`stride`, `postprocess`, `tag_scheme`, `viterbi`, `transition_mode`,
+`transition_weight`, — поэтому CLI и HTTP дают одинаковый ответ.
 
 ```bash
-docker compose up --build
+docker compose -f compose.yaml -f compose.gpu.yaml -f compose.hf.yaml up -d --build
 python scripts/check_service.py --url http://localhost:8000
 ```
 
-Загрузка с `local_files_only=True`, контейнер в сеть не ходит. Для CUDA при прямом
-`docker run` добавьте `--gpus all -e NER_DEVICE=cuda`. Контракт — в [`API.md`](API.md).
+`compose.gpu.yaml` пробрасывает NVIDIA GPU, `compose.hf.yaml` включает загрузку с
+Hub. Без первого сервис считает на CPU, это примерно в 40 раз медленнее.
+
+| переменная | назначение |
+|------------|-----------|
+| `NER_MODEL_REPO` | репозиторий модели, по умолчанию `AsphodelRem/uz-ner-rembert` |
+| `NER_MODEL_REVISION` | коммит; без пина тянется `main` и модель может смениться |
+| `NER_MODEL_DIR` | путь к готовому снапшоту: так сервис поднимается без сети |
+| `NER_DEVICE` | `auto`, `cpu` или `cuda` |
+| `NER_BATCH_SIZE` | размер батча окон |
+
+Кеш вынесен в том `hf-cache`: без него пересозданный контейнер выкачивает 2,3 ГБ
+заново. Первый старт занимает несколько минут, последующие — секунды.
+
+Репозиторий модели повторяет раскладку прогона: веса в `model/`, рядом
+`run_config.json` и `transitions.json`. Плоская раскладка тоже поддерживается.
+
+Полностью офлайновый запуск: скачайте снапшот заранее и укажите его каталог.
+
+```bash
+hf download AsphodelRem/uz-ner-rembert --local-dir artifacts/ship
+docker run --rm -p 8000:8000 --gpus all \
+  -e NER_DEVICE=cuda -e NER_MODEL_DIR=/app/artifacts/ship/model \
+  -v "$PWD/artifacts/ship:/app/artifacts/ship:ro" ner-uz-solution:latest
+```
+
+Контракт запросов и ответов — в [`API.md`](API.md).
 
 ## Декодирование Витерби
 

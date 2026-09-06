@@ -1,0 +1,20 @@
+# Модель тянется с Hugging Face при старте, в образе весов нет.
+#
+#   docker compose -f compose.yaml -f compose.gpu.yaml -f compose.hf.yaml up -d
+#
+# Кеш вынесен в том: без него каждый пересозданный контейнер качает 2,3 ГБ заново.
+services:
+  ner-api:
+    environment:
+      NER_MODEL_REPO: "${NER_MODEL_REPO:-AsphodelRem/uz-ner-rembert}"
+      # Пин обязателен: без него сервис тянет main и модель может смениться.
+      NER_MODEL_REVISION: "${NER_MODEL_REVISION:-f11db5a111e8f31f5907786798b01e0eff33f66a}"
+      HF_TOKEN: "${HF_TOKEN:-}"
+      HF_HOME: "/app/.cache/huggingface"
+      # Перебивает офлайн из compose.yaml: модель живёт на Hub.
+      HF_HUB_OFFLINE: "0"
+    volumes:
+      - hf-cache:/app/.cache/huggingface
+
+volumes:
+  hf-cache:
